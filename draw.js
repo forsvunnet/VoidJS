@@ -12,7 +12,6 @@ voidjs.draw = function(){
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   voidjs.ctx = ctx;
 
-
   var ship_pos = voidjs.player.GetPosition();
   var plate = new b2AABB();
   plate.lowerBound = {x: ship_pos.x - 5, y: ship_pos.y - 5};

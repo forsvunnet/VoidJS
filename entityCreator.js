@@ -36,17 +36,21 @@ voidjs.entityCreator.init = function () {
 
 };
 voidjs.entityCreator.example = function() {
+  voidjs.game(0); // Start game immediately
   voidjs.entityCreator.init();
+  voidjs.player.SetPosition({x:0, y:2.5});
+  //console.log(voidjs.entityCreator.body);
   var level = {
     wall: [
-      [[{x:0, y:-2}, {x: 2, y: 2}, {x: -2, y: 2}]],
-      [[{x:0, y:-4}, {x: -2, y: -2}, {x: -2, y: -2}]]
+      [[{x:0, y:-2}, {x: 2, y:  2}, {x: -2, y: 2}]],
+      [[{x:0, y:-4}, {x: 2, y: -2}, {x: -2, y: -2}]]
     ]
   };
   voidjs.entityCreator.buildLevel(level);
 };
 // Debugging shortcut
 vec = voidjs.entityCreator.example;
+setTimeout(vec, 1000);
 
 voidjs.entityCreator.buildLevel = function(level) {
   // Make new entities
@@ -58,12 +62,10 @@ voidjs.entityCreator.buildLevel = function(level) {
     // struct = array of walls
     for (var j in struct) {
       var entity_pair = struct[j];
-      var args = entity_pair[0], specs = false;
-      if (entity_pair.length > 1) {
-        specs = entity_pair[1];
-      }
-      voidjs.entityCreator.prepare(type, args, specs);
+      var args = entity_pair;
+      voidjs.entityCreator.prepare(type, args);
       var entity = voidjs.entityCreator.build();
+      console.log(entity);
       entities[entity.id] = entity;
     }
   }
@@ -71,11 +73,12 @@ voidjs.entityCreator.buildLevel = function(level) {
 };
 voidjs.entityCreator.build = function() {
   var world = voidjs.world;
+  //console.log(voidjs.entityCreator.body);
   var entity = world.CreateBody(voidjs.entityCreator.body);
   entity.id = millis() + '_' + voidjs.entity_index();
   entity.CreateFixture(voidjs.entityCreator.fixture);
   // Short-link vertices
-  entity.vertices = voidjs.entityCreator.fixture.shape.m_vertices;
+  entity.vertices = entity.GetFixtureList().m_shape.m_vertices;// = voidjs.entityCreator.fixture.shape.m_vertices;
   //for (var i in voidjs.entityCreator.fixture.shape.m_vertices) {
   //  entity.vertices.push( new b2Vec2(
   //    voidjs.entityCreator.fixture.shape.m_vertices[i].x,
@@ -100,12 +103,28 @@ voidjs.descriptions.wall = {
   required : 1,
   special: {
     'vertices': function(definition, data) {
-      var shape = definition.GetShape();
-      shape.SetAsVector(data['vertices']);
+      //console.log(definition);
+      //var shape = definition.shape();
+      //console.log(data);
+
+      var b2Vec2 = Box2D.Common.Math.b2Vec2;
+      vertices = [];
+      for (var i = 0; i < data['vertices'].length; i++) {
+        var v = data['vertices'][i];
+        vertices.push(new b2Vec2(v.x, v.y));
+      }
+      //console.log(vertices);
+      definition.shape.SetAsVector(vertices);
     }
   }
 };
-voidjs.entityCreator.prepare = function (type, args, specs) {
+/*// - Chrome code:
+var p = voidjs.player;
+var f = p.GetFixtureList();
+p.vertices = f.m_shape.m_vertices;
+f.m_shape.SetAsVector([{x:0, y:-.2}, {x: .2, y: .2}, {x: -.2, y: .2}]);
+//*/
+voidjs.entityCreator.prepare = function (type, args) {
   var def = {
     'body': voidjs.entityCreator.body,
     'fixture': voidjs.entityCreator.fixture,
@@ -151,8 +170,9 @@ voidjs.entityCreator.prepare = function (type, args, specs) {
     if (description.scripts !== undefined) { voidjs.entityCreator.scripts = description.scripts; }
 
     // Make sure the required amount of arguments have been passed
-    if (args.length >= required) {
+    if (args.length < required) {
       alert(type + ' does not have the required amount of arguments in level description');
+      //console.log(args);
       return;
     }
 
@@ -162,7 +182,7 @@ voidjs.entityCreator.prepare = function (type, args, specs) {
       var attribute = map[i];
       var key = attribute[0];
       var value;
-      if (args.length < i) {
+      if (i < args.length) {
         // In case of an array it means it carries a default.
         // If the arg length is greater than the current map
         // it means that the level description overrides the default.
@@ -178,7 +198,7 @@ voidjs.entityCreator.prepare = function (type, args, specs) {
         data[key] = value;
         // If a callback is defined, run it.
         if (special[key]) {
-          special(def[attribute[1]], data);
+          special[key](def[attribute[1]], data);
         }
       }
       else {

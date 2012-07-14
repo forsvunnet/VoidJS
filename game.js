@@ -18,7 +18,7 @@ voidjs.update = function () {
   }// */
   if (mouse.active && ship.IsActive()) {
     // Kill Ship:
-    ship.kill();
+    //ship.kill();
   }
   var i, j;
   for (i in entities) {
