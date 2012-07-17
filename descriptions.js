@@ -4,7 +4,7 @@ voidjs.descriptions.wall = {
   required : 1,
   special: { 'vertices': vcore.aTob2Vec2 },
   body: { type: Box2D.Dynamics.b2Body.b2_staticBody },
-  style: {fill: '#223033', layer: 11}
+  style: {fill: '#223033', layer: 20}
 };
 voidjs.descriptions.background = {
   map: [['vertices', 'fixture']],
@@ -74,7 +74,7 @@ voidjs.items.gun = function(damage, speed, cooldown) {
     cooldown = 1000; // milliseconds
   }
   var acd = 0; // active cooldowns
-  
+
   return function(self) {
     if (acd > 0) {
       acd-= voidjs.fps;
@@ -123,6 +123,7 @@ voidjs.descriptions.bullet = {
     bullet: true,
     linearDamping: 0
   },
+  fixture: { isSensor: true },
   scripts: [
     function (args) {
       if (args[0].team !== args[1].team){

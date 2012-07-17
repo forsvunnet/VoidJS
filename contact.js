@@ -12,7 +12,7 @@ voidjs.listener.BeginContact = function(contact, impulse) {
     sensor = fixB.m_body;
     body = fixA.m_body;
   }
-  if (sensor !== false) {
+  if (sensor !== false && !body.m_fixtureList.IsSensor()) {
     sensor.scripts.call(body, sensor, contact, impulse);
   }
   else {
@@ -26,7 +26,7 @@ voidjs.listener.BeginContact = function(contact, impulse) {
       bullet = fixB.m_body;
       body = fixA.m_body;
     }
-    if (bullet !== false) {
+    if (bullet !== false && !body.m_fixtureList.IsSensor()) {
       bullet.scripts.call(body, bullet, contact, impulse);
     }
   }
