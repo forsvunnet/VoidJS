@@ -8,6 +8,7 @@ voidjs.update = function () {
       destroy_entities = voidjs.destroy_entities,
       entities = voidjs.entities;
   var b2Vec2 = Box2D.Common.Math.b2Vec2;
+  var b2AABB = Box2D.Collision.b2AABB;
   var shipAt = ship.GetPosition();
   //console.log(ship.m_linearVelocity.x + ', ' + ship.m_linearVelocity.y);
   /* Mouse experiment:
@@ -16,9 +17,22 @@ voidjs.update = function () {
     mR.Subtract(shipAt);
     ship.ApplyForce(mR, shipAt);
   }// */
-  if (mouse.active && ship.IsActive()) {
-    // Kill Ship:
-    //ship.kill();
+
+  if(key.fire) {vpp();}
+  // Per alive player :
+  if (ship.IsActive()) {
+    // Trigger AI's:
+    var pos = ship.GetPosition();
+    var plate = new b2AABB();
+    plate.lowerBound = {x: pos.x - 5, y: pos.y - 5};
+    plate.upperBound = {x: pos.x + 5, y: pos.y + 5};
+
+    voidjs.world.QueryAABB(function (fixture){
+      if (fixture.m_body.isAI || fixture.isAI) {
+        fixture.m_body.scripts.call(fixture.m_body);
+      }
+      return true;
+    }, plate);
   }
   var i, j;
   for (i in entities) {
@@ -48,7 +62,7 @@ voidjs.update = function () {
     ship.ApplyForce(direction, shipAt);
   }
   if (world) {
-    world.Step(1 / 60, 10, 10);
+    world.Step(voidjs.fps / 1000, 10, 10);
     world.DrawDebugData();
     world.ClearForces();
   }
@@ -112,16 +126,108 @@ voidjs.scripts.collectible = function(args){
   var sensor = args[1];
   if (body.isPlayer) {
     var vel = body.GetLinearVelocity().Normalize();
-    vcore.v2a(vel);
+    //vcore.v2a(vel);
     voidjs.particles.base({pos:body.GetPosition(), vel:vel});
     voidjs.world.RemoveBody(sensor);
-    delete voidjs.entities[sensor.id];
   }
 };
-
-vcore.v2a = function(vector) {
-  return Math.atan2(vector.y, vector.x);
+//once = true;
+voidjs.scripts.sentry = function (args) {
+  var self = args[0];
+  // # Activation
+  // During the update sequence the game does an AABB query around
+  // the player looking for AI's. AI's will have their script (this) executed.
+  // I think "this" will be the sentry entity, but if not then it can be passed as an arg
+  // Players are centrally registrered so getting the closest one is just a matter of maths
+  // It might be interesting to use a "team" system though. (AI's fighting each other + you)
+  if (!self.target) {
+    //if (once) {console.log(self); once = false;}
+    var pos = self.GetPosition();
+    var activation = function(fixture){
+      var entity = fixture.m_body;
+      if (entity.team !== undefined && entity.team != self.team) {
+        //console.log(len + );
+        var len = vcore.len(self, entity);
+        if (len < self.target_range) {
+          // Target within range
+          self.target = entity.id;
+          // Activate:
+          self.active_scripts.register(voidjs.scripts.sentry_tracking(self));
+          return true;
+        }
+      }
+      return true;
+    };
+    vcore.q(pos, 5, activation);
+  }
+    //self.aggro[entity.id] = vcore.len(self, entity);
 };
-vcore.a2v = function(angle) {
-  return {x:Math.sin(angle), y:Math.cos(angle)};
+
+voidjs.scripts.sentry_tracking = function (self) {
+  // The active scripts are not called with any arguments so we need to close them in
+
+  // NB! active script is not necesarry for sentries
+  // It's just for consistency in AI's and discovering
+  // recurring patterns that can be modulised.
+
+  // # Aggro system
+  // Initially the Sentry will query (AABB) the area around itself looking
+  // for oposing team entities. It will target the closest one by creating an
+  // aggro table ([array]) with entity id's (closer being more aggressive)
+  // The sentry will per loop continually target the highest aggro entity
+
+  var aggro = {};
+  var script = self.active_scripts.getLength();
+  var ticks = 120; // ~ 4 seconds
+  var count = 0;
+  // Begin closure:
+  var tracking = function(fixture) {
+    var entity = fixture.m_body;
+    if (entity.team !== undefined && entity.team != self.team) {
+      var len = vcore.len(self, entity);
+      if (len < self.target_range) {
+        ticks = 120; // reset ticks
+        if (!(entity.id in aggro)) {
+          // Register a new entity in the aggro table
+          aggro[entity.id] = 0;
+        }
+        aggro[entity.id] += self.target_range - len;
+        count++;
+      }
+    }
+    return true;
+  };
+  var t = 0;
+  return function () {
+    var pos = self.GetPosition();
+    vcore.q(pos, 5, tracking);
+    if (count > 0) {
+      for (var i in aggro) {
+        aggro[i] *= 0.5; // Rapid deterioation
+        if (t === 0 || aggro[i] > aggro[t]) {
+          t = i;
+        }
+      }
+      self.target = t;
+
+      // Use weapon from inventory if available
+      if (t && self.inventory.weapon) {
+        self.inventory.weapon(self);
+      }
+    }
+    ticks--;
+    if (ticks <= 0) {
+      // Self destruct:
+      console.log('Self destructing targeting script');
+      self.active_scripts.remove(script);
+      self.target = 0;
+    }
+  };
+
+  // # Upon activation:
+  // * Register an active script with a timed self-destruct
+  //   - The active script should update the timer if the sentry is
+  //     within range of a player
+  //   - The scripts will create a new bullet if within range of player
+  //     & unobstructed raycast using $weapon-inventory (voidjs.scripts.gun?)
 };

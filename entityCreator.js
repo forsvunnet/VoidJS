@@ -36,21 +36,30 @@ voidjs.entityCreator.init = function () {
 
 };
 voidjs.entityCreator.example = function() {
-  voidjs.game(0); // Start game immediately
+  //voidjs.game(0); // Start game immediately
   voidjs.entityCreator.init();
-  voidjs.player.SetPosition({x:0, y:2.5});
+  //voidjs.player.SetPosition({x:0, y:2.5});
   //console.log(voidjs.entityCreator.body);
   var level = {
     wall: [
-      [[{x:0, y:-2}, {x: 2, y:  2}, {x: -2, y: 2}]],
+      [[{x:0, y:-2}, {x: 2, y:  -0.2}, {x: -2, y: -0.2}]],
       [[{x:0, y:-4}, {x: 2, y: -2}, {x: -2, y: -2}]]
+    ],
+    player: [
+      [0, 0]
+    ],
+    checkpoint: [
+      [0, 0], [4, 2]
+    ],
+    end: [
+      [6, 0]
     ]
   };
-  voidjs.entityCreator.buildLevel(level);
+  voidjs.entityCreator.buildLevel(voidjs.levels[0]);
 };
 // Debugging shortcut
 vec = voidjs.entityCreator.example;
-setTimeout(vec, 1000);
+//setTimeout(vec, 1000);
 
 voidjs.entityCreator.buildLevel = function(level) {
   // Make new entities
@@ -61,24 +70,32 @@ voidjs.entityCreator.buildLevel = function(level) {
     var struct = level[type];
     // struct = array of walls
     for (var j in struct) {
-      var entity_pair = struct[j];
-      var args = entity_pair;
+      var args = struct[j];
       voidjs.entityCreator.prepare(type, args);
       var entity = voidjs.entityCreator.build();
-      console.log(entity);
+      //console.log(entity);
       entities[entity.id] = entity;
     }
   }
 
+};
+voidjs.entityCreator.create = function(type, args) {
+  voidjs.entityCreator.prepare(type, args);
+  var entity = voidjs.entityCreator.build();
+  voidjs.entities[entity.id] = entity;
 };
 voidjs.entityCreator.build = function() {
   var world = voidjs.world;
   //console.log(voidjs.entityCreator.body);
   var entity = world.CreateBody(voidjs.entityCreator.body);
   entity.id = millis() + '_' + voidjs.entity_index();
+  //console.log(voidjs.entityCreator.fixture.shape);
+  if (voidjs.entityCreator.fixture.shape.m_vertexCount === 0) {
+    voidjs.entityCreator.fixture.shape.SetAsBox(0.2, 0.2);
+  }
   entity.CreateFixture(voidjs.entityCreator.fixture);
   // Short-link vertices
-  entity.vertices = entity.GetFixtureList().m_shape.m_vertices;// = voidjs.entityCreator.fixture.shape.m_vertices;
+  entity.vertices = entity.m_fixtureList.m_shape.m_vertices;// = voidjs.entityCreator.fixture.shape.m_vertices;
   //for (var i in voidjs.entityCreator.fixture.shape.m_vertices) {
   //  entity.vertices.push( new b2Vec2(
   //    voidjs.entityCreator.fixture.shape.m_vertices[i].x,
@@ -91,32 +108,17 @@ voidjs.entityCreator.build = function() {
   // Creates a new instance of a script register
   // It's quite complex code so better leave it at that
   entity.scripts = vcore.scripts();
+  var i, script;
   if (voidjs.entityCreator.scripts) {
-    for (var script in voidjs.entityCreator.scripts) {
+    for (i in voidjs.entityCreator.scripts) {
+      script = voidjs.entityCreator.scripts[i];
       entity.scripts.register(script);
     }
   }
-  return entity;
-};
-voidjs.descriptions.wall = {
-  map: [['vertices', 'fixture']],
-  required : 1,
-  special: {
-    'vertices': function(definition, data) {
-      //console.log(definition);
-      //var shape = definition.shape();
-      //console.log(data);
-
-      var b2Vec2 = Box2D.Common.Math.b2Vec2;
-      vertices = [];
-      for (var i = 0; i < data['vertices'].length; i++) {
-        var v = data['vertices'][i];
-        vertices.push(new b2Vec2(v.x, v.y));
-      }
-      //console.log(vertices);
-      definition.shape.SetAsVector(vertices);
-    }
+  if (voidjs.entityCreator.after) {
+    voidjs.entityCreator.after(entity);
   }
+  return entity;
 };
 /*// - Chrome code:
 var p = voidjs.player;
@@ -137,7 +139,7 @@ voidjs.entityCreator.prepare = function (type, args) {
     var description = voidjs.descriptions[type];
 
     // Reset defaults
-    voidjs.entityCreator.reset(description.defaults);
+    voidjs.entityCreator.reset(description);
 
     // Apply default mappings:
     // I defined the mapping format like this because body, fixture
@@ -155,7 +157,8 @@ voidjs.entityCreator.prepare = function (type, args) {
     var special = {
       'x' : 0,
       'y' : function (definition, data) {
-        definition.position.Set(data['x'], data['y']);
+        // definition = bodyDef
+        definition.position = new Box2D.Common.Math.b2Vec2(data['x'], data['y']);
       },
       'width' : 0,
       'height' : function (definition, data) {
@@ -166,8 +169,10 @@ voidjs.entityCreator.prepare = function (type, args) {
     // Override defaults with description definitions
     if (description.map !== undefined) { map = description.map; }
     if (description.required !== undefined) { required = description.required; }
+    // @TODO: Count required instead
     if (description.special !== undefined) { special = description.special; }
     if (description.scripts !== undefined) { voidjs.entityCreator.scripts = description.scripts; }
+    if (description.after !== undefined) { voidjs.entityCreator.after = description.after; }
 
     // Make sure the required amount of arguments have been passed
     if (args.length < required) {
@@ -214,6 +219,7 @@ voidjs.entityCreator.prepare = function (type, args) {
   }
 };
 voidjs.entityCreator.reset = function (definition){
+  voidjs.entityCreator.style = {};
   var def = {
     'body': voidjs.entityCreator.body,
     'fixture' : voidjs.entityCreator.fixture,
@@ -221,27 +227,39 @@ voidjs.entityCreator.reset = function (definition){
   };
 
   voidjs.entityCreator.scripts = 0;
+  voidjs.entityCreator.after = 0;
 
   // Fixture defaults
   def['fixture'].density = 1.0;
   def['fixture'].friction = 0.5;
   def['fixture'].restitution = 0.2;
+  def['fixture'].isSensor = false;
   def['fixture'].shape = voidjs.entityCreator.shapes.polygon;
+  def['fixture'].shape.m_normals = [];
+  def['fixture'].shape.m_vertices = [];
+  def['fixture'].shape.m_vertexCount = 0;
 
   // Body defaults
+  def['body'].type = Box2D.Dynamics.b2Body.b2_dynamicBody;
   def['body'].linearDamping = 2;
   def['body'].angularDamping = 2;
+  def['body'].bullet = false;
+  def['body'].position = {x:0, y:0};
 
   // Style defaults
-  def['style'].stroke = 'rgb('+200+','+(0)+','+(0)+')';
-  def['style'].fill = '#444';
+  def['style'].layer = 0;
+  def['style'].stroke = '#999';
+  def['style'].fill = '#222';
 
-  var property, i;
-  for (property in ['body', 'fixture', 'style']){
+  var i, j, props = ['body', 'fixture', 'style'];
+  //console.log(definition);
+  for (i in props){
+    var property = props[i];
+    //console.log(property);
     if (definition && definition[property]) {
-      for (i in definition[property]) {
-        if (definition[property].hasOwnProperty(i)){
-          def[property][i] = definition[property][i];
+      for (j in definition[property]) {
+        if (definition[property].hasOwnProperty(j)){
+          def[property][j] = definition[property][j];
         }
       }
     }

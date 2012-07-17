@@ -5,6 +5,11 @@ var is_array = function (value) {
 };
 
 voidjs.draw = function(){
+  if (voidjs.time) {
+    var fps = 1000 / (new Date().getTime() - voidjs.time);
+    document.getElementById('fps').innerHTML = fps;
+  }
+  voidjs.time = new Date().getTime();
   var canvas = voidjs.canvas;
   var entities = voidjs.entities;
   var ctx = canvas.getContext('2d');
@@ -16,12 +21,26 @@ voidjs.draw = function(){
   var plate = new b2AABB();
   plate.lowerBound = {x: ship_pos.x - 5, y: ship_pos.y - 5};
   plate.upperBound = {x: ship_pos.x + 5, y: ship_pos.y + 5};
+  var que = {};
+  layers = [];
   voidjs.world.QueryAABB(function (fixture){
-    if (fixture.m_body.IsActive()) {
-      fixture.m_body.draw();
+    var layer = fixture.m_body.style.layer;
+    if (!que[layer]) {
+      que[layer] = [];
+      layers.push(layer);
     }
+    que[layer].push(fixture.m_body);
     return true;
   }, plate);
+
+  layers.sort();
+
+  for (var i in layers) {
+    var layer = layers[i];
+    for (var body in que[layer]){
+      que[layer][body].draw();
+    }
+  }
 };
 voidjs.stencil.drawBox = function () {
   // this = entity from which the draw is called

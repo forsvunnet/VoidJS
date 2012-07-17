@@ -45,6 +45,34 @@ vcore.scripts = function() {
   };
 };
 
+// QueryAAB
+vcore.q = function (pos, size, callback) {
+  var b2AABB = Box2D.Collision.b2AABB;
+  var plate = new b2AABB();
+  plate.lowerBound = {x: pos.x - size, y: pos.y - size};
+  plate.upperBound = {x: pos.x + size, y: pos.y + size};
+
+  voidjs.world.QueryAABB(callback, plate);
+};
+
+vcore.v2a = function(vector) {
+  return Math.atan2(vector.x, vector.y);
+};
+
+vcore.a2v = function(angle, magnitude) {
+  if (magnitude === undefined) {
+    magnitude = 1;
+  }
+  return {x:Math.sin(angle) * magnitude, y:Math.cos(angle) * magnitude};
+};
+
+vcore.len = function(e1, e2) {
+  var p1 = e1.GetPosition();
+  var p2 = e2.GetPosition();
+  var dx = p1.x - p2.x, dy = p1.y - p2.y;
+  return Math.sqrt(dx*dx + dy*dy);
+};
+
 // Calculate normals from an array of vectors [{x, y}]
 vcore.normals = function(vertices) {
   var normals = [];
@@ -63,6 +91,15 @@ vcore.normals = function(vertices) {
     normals.push(a1 + a);
   }
   return normals;
+};
+vcore.aTob2Vec2 = function(definition, data) {
+  var b2Vec2 = Box2D.Common.Math.b2Vec2;
+  vertices = [];
+  for (var i = 0; i < data['vertices'].length; i++) {
+    var v = data['vertices'][i];
+    vertices.push(new b2Vec2(v[0], v[1]));
+  }
+  definition.shape.SetAsVector(vertices);
 };
 // @TODO:
 // Try to focus on essential functions.
@@ -119,7 +156,7 @@ var voidjs = {
     };
   }(),
   stencil : {},
-  fps: 1000/60,
+  fps: 1000/30,
   destroy_entities: [],
   //@TODO : turn entities into an array so we can remove all reference to its object easily
   entities  : {},
@@ -176,6 +213,9 @@ var voidjs = {
       // Helper function to Destroy bodies irrelevant to context.
       // If the world is locked then send the body to the que for
       // bodies to be destroyed.
+      if (body.id) {
+        delete voidjs.entities[body.id];
+      }
       if (!world.IsLocked()) {
         // Destroy the body
         world.DestroyBody(body);
@@ -185,7 +225,7 @@ var voidjs = {
     };
     var entities = {};
     voidjs.entities = entities;
-
+    /*
     // Fixture
     var fixDef = new b2FixtureDef();
     fixDef.density = 1.0;
@@ -209,6 +249,7 @@ var voidjs = {
     fixDef.isSensor = true;
     bodyDef.type = b2Body.b2_staticBody;
     // Loop through zones from the level description
+    /*
     for (i in level.zones) {
       var zone = level.zones[i];
       // Implement a switch here for type?
@@ -252,17 +293,6 @@ var voidjs = {
       // - Script
       // - - Active
       // - - Passive
-      switch (collectible.type) {
-        case 'x1':
-
-          break;
-        case 'x2':
-
-          break;
-        default:
-          // Nothing
-          break;
-      }
       entities[entity.id] = entity;
     }
 
@@ -271,11 +301,11 @@ var voidjs = {
     bodyDef.type = b2Body.b2_dynamicBody;
     fixDef.shape.SetAsBox(0.2, 0.2);
     fixDef.isSensor = false;
+    /*
     bodyDef.position = new b2Vec2(start.x,start.y);
-
     bodyDef.linearDamping = 10;
     var ship = buildEntity();
-    bodyDef.linearDamping = 2;
+
     ship.style.fill = '#fff';
     ship.style.stroke = false;
     voidjs.player = ship;
@@ -287,8 +317,11 @@ var voidjs = {
       ship.SetActive(false);
       ship.active_scripts.register(voidjs.scripts.spawner());
     };
+    bodyDef.linearDamping = 2;
+    */
 
     // Make walls
+    /*
     bodyDef.type = b2Body.b2_staticBody;
     for (i in level.walls) {
       var wall = level.walls[i];
@@ -306,9 +339,11 @@ var voidjs = {
       entity.style.stroke = '#444';
       entities[entity.id] = entity;
     }
+    */
 
     world.SetContactListener(voidjs.listener);
 
+    vec();
     voidjs.ticker = window.setInterval(voidjs.update, voidjs.fps);
 
     // Helpers
@@ -337,7 +372,7 @@ var voidjs = {
         //http://js-tut.aardon.de/js-tut/tutorial/position.html
     getElementPosition: function (element) {
       var elem=element, tagname="", x=0, y=0;
-     
+
       while ((typeof(elem) == "object") && (typeof(elem.tagName) != "undefined")) {
          y += elem.offsetTop;
          x += elem.offsetLeft;
