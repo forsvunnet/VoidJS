@@ -81,10 +81,10 @@ voidjs.entityCreator.buildLevel = function(level) {
 };
 voidjs.entityCreator.create = function(type, args) {
   voidjs.entityCreator.prepare(type, args);
-  var entity = voidjs.entityCreator.build();
+  var entity = voidjs.entityCreator.build(args);
   voidjs.entities[entity.id] = entity;
 };
-voidjs.entityCreator.build = function() {
+voidjs.entityCreator.build = function(args) {
   var world = voidjs.world;
   //console.log(voidjs.entityCreator.body);
   var entity = world.CreateBody(voidjs.entityCreator.body);
@@ -95,13 +95,7 @@ voidjs.entityCreator.build = function() {
   }
   entity.CreateFixture(voidjs.entityCreator.fixture);
   // Short-link vertices
-  entity.vertices = entity.m_fixtureList.m_shape.m_vertices;// = voidjs.entityCreator.fixture.shape.m_vertices;
-  //for (var i in voidjs.entityCreator.fixture.shape.m_vertices) {
-  //  entity.vertices.push( new b2Vec2(
-  //    voidjs.entityCreator.fixture.shape.m_vertices[i].x,
-  //    voidjs.entityCreator.fixture.shape.m_vertices[i].y
-  //  ));
-  //}
+  entity.vertices = entity.m_fixtureList.m_shape.m_vertices;
   entity.draw = voidjs.stencil.drawBox;
   entity.style = voidjs.entityCreator.style;
 
@@ -116,7 +110,7 @@ voidjs.entityCreator.build = function() {
     }
   }
   if (voidjs.entityCreator.after) {
-    voidjs.entityCreator.after(entity);
+    voidjs.entityCreator.after(entity, args);
   }
   return entity;
 };

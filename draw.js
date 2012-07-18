@@ -7,7 +7,7 @@ var is_array = function (value) {
 voidjs.draw = function(){
   if (voidjs.time) {
     var fps = 1000 / (new Date().getTime() - voidjs.time);
-    document.getElementById('fps').innerHTML = fps;
+    document.getElementById('fps').innerHTML = fps + '<br>' + voidjs.player.life;
   }
   voidjs.time = new Date().getTime();
   var canvas = voidjs.canvas;

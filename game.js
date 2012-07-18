@@ -35,6 +35,7 @@ voidjs.update = function () {
     }, plate);
   }
   var i, j;
+  // very slow loop: (Should be discontinued)
   for (i in entities) {
     if (entities[i].active_scripts !== undefined) {
       entities[i].active_scripts.call();
@@ -78,7 +79,8 @@ voidjs.scripts.spawner = function () {
   var ship = voidjs.player;
   var tick = 0;
   // Find this script in the que in order to self-destruct
-  var i = ship.scripts.getLength();
+  var i = ship.active_scripts.getLength();
+  console.log("Spawner at: " + i);
   return function(){
     if(tick > 60) {
       ship.SetPosition( ship.checkpoint?
@@ -86,7 +88,9 @@ voidjs.scripts.spawner = function () {
         {x:7, y:7}
         );
       ship.SetActive(true);
+      ship.life = ship.max_life || 20;
       // Self-destruct
+      console.log('Self destructing respawner');
       ship.active_scripts.remove(i);
     }
     tick++;
@@ -177,6 +181,7 @@ voidjs.scripts.sentry_tracking = function (self) {
   // The sentry will per loop continually target the highest aggro entity
 
   var aggro = {};
+  var present = {};
   var script = self.active_scripts.getLength();
   var ticks = 120; // ~ 4 seconds
   var count = 0;
@@ -184,6 +189,7 @@ voidjs.scripts.sentry_tracking = function (self) {
   var tracking = function(fixture) {
     var entity = fixture.m_body;
     if (entity.team !== undefined && entity.team != self.team) {
+      // Targeted entity is of another team
       var len = vcore.len(self, entity);
       if (len < self.target_range) {
         ticks = 120; // reset ticks
@@ -191,6 +197,7 @@ voidjs.scripts.sentry_tracking = function (self) {
           // Register a new entity in the aggro table
           aggro[entity.id] = 0;
         }
+        present[entity.id] = 1;
         aggro[entity.id] += self.target_range - len;
         count++;
       }
@@ -200,11 +207,12 @@ voidjs.scripts.sentry_tracking = function (self) {
   var t = 0;
   return function () {
     var pos = self.GetPosition();
+    present = {}; count = 0;
     vcore.q(pos, 5, tracking);
     if (count > 0) {
       for (var i in aggro) {
-        aggro[i] *= 0.5; // Rapid deterioation
-        if (t === 0 || aggro[i] > aggro[t]) {
+        aggro[i] *= 0.9; // Rapid deterioation
+        if ((t === 0 || aggro[i] > aggro[t]) && i in present) {
           t = i;
         }
       }
@@ -230,4 +238,29 @@ voidjs.scripts.sentry_tracking = function (self) {
   //     within range of a player
   //   - The scripts will create a new bullet if within range of player
   //     & unobstructed raycast using $weapon-inventory (voidjs.scripts.gun?)
+};
+
+
+voidjs.scripts.life = function (self) {
+  return function () {
+    if (self.kill && self.IsActive() && self.life <= 0) {
+      self.kill();
+    }
+  };
+};
+voidjs.scripts.regen = function (self, rate) {
+  if (rate === undefined) {
+    rate = 1 / voidjs.fps;
+  }
+  return function () {
+    if (self.IsActive() && self.life) {
+      var max = self.max_life || 20;
+      if (self.life < max) {
+        self.life += rate;
+      }
+      if (self.life > max) {
+        self.life = max;
+      }
+    }
+  };
 };

@@ -30,7 +30,11 @@ voidjs.descriptions.player = {
     entity.checkpoint = false;
     entity.isPlayer = true;
     entity.team = 1;
+    entity.life = 10;
+    entity.max_life = 10;
     entity.active_scripts = vcore.scripts();
+    entity.active_scripts.register(voidjs.scripts.life(entity));
+    entity.active_scripts.register(voidjs.scripts.regen(entity));
     entity.GetFixtureList().m_shape.SetAsBox(0.2, 0.2);
     entity.kill = function() {
       entity.SetActive(false);
@@ -126,14 +130,24 @@ voidjs.descriptions.bullet = {
   fixture: { isSensor: true },
   scripts: [
     function (args) {
-      if (args[0].team !== args[1].team){
-        voidjs.world.RemoveBody(args[1]);
+      var bullet = args[1];
+      var body = args[0];
+      if (body.team !== bullet.team){
+        if (bullet.damage && body.life) {
+          body.life -= bullet.damage;
+        }
+        // Particles in the reverse direction of the hit:
+        // @TODO
+
+        // Goodbye bullet:
+        voidjs.world.RemoveBody(bullet);
       }
     }
   ],
-  after: function(entity) {
+  after: function(entity, args) {
     // Set to team 0 to allow Friendly Fire
     entity.team = 2;
+    entity.damage = args[3];
     entity.m_fixtureList.m_shape.SetAsBox(0.1, 0.1);
     b.push(entity);
   }
