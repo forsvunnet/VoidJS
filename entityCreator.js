@@ -35,31 +35,6 @@ voidjs.entityCreator.init = function () {
   voidjs.entityCreator.scripts = 0;
 
 };
-voidjs.entityCreator.example = function() {
-  //voidjs.game(0); // Start game immediately
-  voidjs.entityCreator.init();
-  //voidjs.player.SetPosition({x:0, y:2.5});
-  //console.log(voidjs.entityCreator.body);
-  var level = {
-    wall: [
-      [[{x:0, y:-2}, {x: 2, y:  -0.2}, {x: -2, y: -0.2}]],
-      [[{x:0, y:-4}, {x: 2, y: -2}, {x: -2, y: -2}]]
-    ],
-    player: [
-      [0, 0]
-    ],
-    checkpoint: [
-      [0, 0], [4, 2]
-    ],
-    end: [
-      [6, 0]
-    ]
-  };
-  voidjs.entityCreator.buildLevel(voidjs.levels[0]);
-};
-// Debugging shortcut
-vec = voidjs.entityCreator.example;
-//setTimeout(vec, 1000);
 
 voidjs.entityCreator.buildLevel = function(level) {
   // Make new entities
@@ -79,10 +54,22 @@ voidjs.entityCreator.buildLevel = function(level) {
   }
 
 };
+voidjs.entityCreator.late = [];
 voidjs.entityCreator.create = function(type, args) {
-  voidjs.entityCreator.prepare(type, args);
-  var entity = voidjs.entityCreator.build(args);
-  voidjs.entities[entity.id] = entity;
+  if (!voidjs.world.IsLocked()) {
+    voidjs.entityCreator.prepare(type, args);
+    var entity = voidjs.entityCreator.build(args);
+    voidjs.entities[entity.id] = entity;
+  } else {
+    voidjs.entityCreator.late.push([type, args]);
+  }
+};
+voidjs.entityCreator.lateCreate = function() {
+  var late = voidjs.entityCreator.late;
+  for (var i = 0; i < late.length; i++) {
+    voidjs.entityCreator.create(late[i][0], late[i][1]);
+  }
+  voidjs.entityCreator.late = [];
 };
 voidjs.entityCreator.build = function(args) {
   var world = voidjs.world;
@@ -96,7 +83,7 @@ voidjs.entityCreator.build = function(args) {
   entity.CreateFixture(voidjs.entityCreator.fixture);
   // Short-link vertices
   entity.vertices = entity.m_fixtureList.m_shape.m_vertices;
-  entity.draw = voidjs.stencil.drawBox;
+  entity.draw = voidjs.stencil.drawEntity;
   entity.style = voidjs.entityCreator.style;
 
   // Creates a new instance of a script register
@@ -170,8 +157,7 @@ voidjs.entityCreator.prepare = function (type, args) {
 
     // Make sure the required amount of arguments have been passed
     if (args.length < required) {
-      alert(type + ' does not have the required amount of arguments in level description');
-      //console.log(args);
+      alert(type + ' does not have the required amount of arguments in the level description');
       return;
     }
 
@@ -190,19 +176,24 @@ voidjs.entityCreator.prepare = function (type, args) {
       else {
         // ... otherwise use the default.
         value = attribute[2];
+        // + pass it back up the line
+        args[i] = attribute[2];
       }
 
-      // Apply the value to the definition
+      // Always store the value (so it can be used in after or in a special)
+      data[key] = value;
+
       if (key in special) {
-        data[key] = value;
-        // If a callback is defined, run it.
         if (special[key]) {
+          // If a callback is not false, run it.
           special[key](def[attribute[1]], data);
         }
       }
-      else {
+      else if (attribute[1] != 'after') { // After is not a valid def
         // No special treatment for the key, let it pass
+        // Apply the value to the definition
         def[attribute[1]][key] = value;
+        //console.log('def[' + attribute[1] + '][' + key + '] = ' + value);
       }
     }
 
@@ -212,7 +203,7 @@ voidjs.entityCreator.prepare = function (type, args) {
     alert('Type: ' + type + ' not found in descriptions');
   }
 };
-voidjs.entityCreator.reset = function (definition){
+voidjs.entityCreator.reset = function (description){
   voidjs.entityCreator.style = {};
   var def = {
     'body': voidjs.entityCreator.body,
@@ -242,18 +233,18 @@ voidjs.entityCreator.reset = function (definition){
 
   // Style defaults
   def['style'].layer = 0;
-  def['style'].stroke = '#999';
-  def['style'].fill = '#222';
+  def['style'].stroke = 0;
+  def['style'].fill = 0;
 
   var i, j, props = ['body', 'fixture', 'style'];
   //console.log(definition);
   for (i in props){
     var property = props[i];
     //console.log(property);
-    if (definition && definition[property]) {
-      for (j in definition[property]) {
-        if (definition[property].hasOwnProperty(j)){
-          def[property][j] = definition[property][j];
+    if (description && description[property]) {
+      for (j in description[property]) {
+        if (description[property].hasOwnProperty(j)){
+          def[property][j] = description[property][j];
         }
       }
     }

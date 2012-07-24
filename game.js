@@ -1,5 +1,6 @@
 // Update
 voidjs.update = function () {
+  voidjs.entityCreator.lateCreate();
   voidjs.draw();
   var mouse = voidjs.control.mouse,
       world = voidjs.world,
@@ -18,14 +19,14 @@ voidjs.update = function () {
     ship.ApplyForce(mR, shipAt);
   }// */
 
-  if(key.fire) {vpp();}
   // Per alive player :
   if (ship.IsActive()) {
     // Trigger AI's:
     var pos = ship.GetPosition();
     var plate = new b2AABB();
-    plate.lowerBound = {x: pos.x - 5, y: pos.y - 5};
-    plate.upperBound = {x: pos.x + 5, y: pos.y + 5};
+    var area = 7;
+    plate.lowerBound = {x: pos.x - area, y: pos.y - area};
+    plate.upperBound = {x: pos.x + area, y: pos.y + area};
 
     voidjs.world.QueryAABB(function (fixture){
       if (fixture.m_body.isAI || fixture.isAI) {
@@ -58,7 +59,7 @@ voidjs.update = function () {
     key.down  ?  1:
     0;
   direction.Normalize();
-  direction.Multiply(25);
+  direction.Multiply(20);
   if (direction.x !== 0 || direction.y !== 0) {
     ship.ApplyForce(direction, shipAt);
   }
@@ -129,9 +130,16 @@ voidjs.scripts.collectible = function(args){
   var body = args[0];
   var sensor = args[1];
   if (body.isPlayer) {
-    var vel = body.GetLinearVelocity().Normalize();
-    //vcore.v2a(vel);
-    voidjs.particles.base({pos:body.GetPosition(), vel:vel});
+      var amount = 10;
+      var r = Math.PI *2; // 30 degrees freedom
+      var pos = body.GetPosition();
+      var bvel = body.GetLinearVelocity();
+      for (var i = 0; i < amount; i++) {
+        var vel = vcore.a2v(Math.random() * r, Math.random() * 7 + 3);
+        vel.x += bvel.x;
+        vel.y += bvel.y;
+        voidjs.entityCreator.create('particle', [pos, vel, '#FFFFFF', 2, [1000, 2000], 0.1]);
+      }
     voidjs.world.RemoveBody(sensor);
   }
 };
@@ -226,7 +234,7 @@ voidjs.scripts.sentry_tracking = function (self) {
     ticks--;
     if (ticks <= 0) {
       // Self destruct:
-      console.log('Self destructing targeting script');
+      //console.log('Self destructing targeting script');
       self.active_scripts.remove(script);
       self.target = 0;
     }
@@ -245,6 +253,30 @@ voidjs.scripts.life = function (self) {
   return function () {
     if (self.kill && self.IsActive() && self.life <= 0) {
       self.kill();
+    }
+  };
+};
+voidjs.scripts.decay = function (self, rate) {
+  return function () {
+    self.life -= rate;
+  };
+};
+voidjs.scripts.fade = function (self, art) {
+  if (art === undefined) {
+    art = self.style;
+  }
+  var r = parseInt(art.fill.substr(1,2), 16);
+  var g = parseInt(art.fill.substr(3,2), 16);
+  var b = parseInt(art.fill.substr(5,2), 16);
+  return function () {
+    var opac = 0;
+    if (self.life !== 0) {
+      opac = self.life / self.max_life;
+    }
+    if (opac > 0.1) {
+      art.fill = 'rgba(' + r + ',' + g + ',' + b + ',' + opac + ')';
+    } else {
+      art.fill = false;
     }
   };
 };

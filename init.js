@@ -8,7 +8,7 @@ var millis = function () {
   return new Date().getTime();
 };
 
-vcore = {};
+var vcore = {};
 vcore.scripts = function() {
   // This is a nifty way of letting entities carry their own scripts
   // instead of defining a new script for every event
@@ -39,7 +39,7 @@ vcore.scripts = function() {
       return data[i]();
     },
     remove: function(i) {
-      console.log(i);
+      //console.log(i);
       data.splice(i,1);
     }
   };
@@ -64,6 +64,17 @@ vcore.a2v = function(angle, magnitude) {
     magnitude = 1;
   }
   return {x:Math.sin(angle) * magnitude, y:Math.cos(angle) * magnitude};
+};
+
+vcore.scale = function(vertices, scale) {
+  if (scale === undefined) {
+    scale = 0.1;
+  }
+  var poly = [];
+  for (var i = 0; i < vertices.length; i++) {
+    poly.push({x: vertices[i].x * scale, y: vertices[i].y * scale});
+  }
+  return poly;
 };
 
 vcore.len = function(e1, e2) {
@@ -101,6 +112,71 @@ vcore.aTob2Vec2 = function(definition, data) {
   }
   definition.shape.SetAsVector(vertices);
 };
+vcore.predict = function(pos, speed, target) {
+  var p1 = target.GetPosition();
+  var vel = target.GetLinearVelocity();
+  var m1 = {x:0, y:0}, m2 = {x:0, y:0};
+  var len = 999, t = 0, a2;
+  //var a1 = Math.atan2(vel.x, vel.y);
+  var a1 = Math.atan2(vel.y, vel.x);
+  var s1 = Math.sqrt(vel.x * vel.x + vel.y * vel.y);
+  var closest = 0;
+  var str = 't: ';
+  for (t=0; t < 2; t+= 0.05) {
+    m1.x = p1.x + Math.cos(a1) * s1 * t;
+    m1.y = p1.y + Math.sin(a1) * s1 * t;
+    a2 = Math.atan2(m1.y - pos.y, m1.x - pos.x);
+    m2.x = pos.x + Math.cos(a2) * speed * t;
+    m2.y = pos.y + Math.sin(a2) * speed * t;
+    if (vcore.seg(pos.x, pos.y, m2.x, m2.y, p1.x, p1.y, m1.x, m1.y)) {
+      break;
+    }
+    var dx = m2.x - m1.x;
+    var dy = m2.y - m1.y;
+    var dst = Math.sqrt(dx*dx + dy*dy);
+    if (dst < len) {
+      closest = t;
+      len = dst;
+    }
+    str += t + ', ';
+  }
+  m1.x = p1.x + Math.cos(a1) * s1 * closest;
+  m1.y = p1.y + Math.sin(a1) * s1 * closest;
+  //console.log('1:['+p1.x + ', '+p1.y+']\n2:[' + m1.x + ', ' + m1.y + ']');
+  //return {x:0, y:1};
+  return m1;
+};
+vcore.seg = function(x1, y1, x2, y2, x3, y3, x4, y4) {
+  var bx = x2 - x1;
+  var by = y2 - y1;
+  var dx = x4 - x3;
+  var dy = y4 - y3;
+  var b_dot_d_perp = bx * dy - by * dx;
+  if(b_dot_d_perp === 0) {
+    return false;
+  }
+  var cx = x3 - x1;
+  var cy = y3 - y1;
+  var t = (cx * dy - cy * dx) / b_dot_d_perp;
+  if(t < 0 || t > 1) {
+    return false;
+  }
+
+  var u = (cx * by - cy * bx) / b_dot_d_perp;
+  if(u < 0 || u > 1) {
+    return false;
+  }
+  return true;
+};
+
+var c = [
+  '#222222', // BG
+  '#444444', // Wall line
+  '#666666', // Level BG
+  '#3399FF', // Player color
+  '#FF0099', // Enemy color
+  '#6666FF'  // Checkpoint / End
+];
 // @TODO:
 // Try to focus on essential functions.
 // Especially important are features that allow for
@@ -119,7 +195,7 @@ vcore.aTob2Vec2 = function(definition, data) {
 // 2. 95% - Camera to follow player
 //        * Smoothing required. Non-essential
 //
-// 3. 80% - Zones
+// 3. 100% - Zones
 //        * Custom scriptable zone
 //
 // 4. 40% - Collectibles
@@ -138,7 +214,8 @@ vcore.aTob2Vec2 = function(definition, data) {
 //
 // 5. 01% - Particles
 //        * box2d = entity. Ignore everything but walls? - non-essential.
-//        * Non box2d = non entity. Requires own "physics"
+//        * [Redundant:] Non box2d = non entity. Requires own "physics"
+//          (We use box2d because of the AABB selection for rendering & other consistency issues)
 //
 var voidjs = {
   canvas : document.getElementById('canvas'),
@@ -175,7 +252,7 @@ var voidjs = {
     document.addEventListener("mouseup", voidjs.control.mouseup);
     document.addEventListener("mousedown", voidjs.control.mousedown);
     document.addEventListener("mousemove", voidjs.control.mousemove);
-
+    voidjs.canvas.style.backgroundColor = c[0];
     var scenes = {
       game: this.game,
       menu: this.menu.show
@@ -225,125 +302,11 @@ var voidjs = {
     };
     var entities = {};
     voidjs.entities = entities;
-    /*
-    // Fixture
-    var fixDef = new b2FixtureDef();
-    fixDef.density = 1.0;
-    fixDef.friction = 0.5;
-    fixDef.restitution = 0.2;
-    fixDef.shape = new b2PolygonShape();
-
-    // Rigidbodies
-    var bodyDef = new b2BodyDef();
-    bodyDef.linearDamping = 2;
-    bodyDef.angularDamping = 2;
-
-    // Build level
-    //console.log(chapter);
-    var level = voidjs.levels[chapter];
-    var entity, i;
-
-
-    // Make some zones
-    fixDef.shape.SetAsBox(1, 1);
-    fixDef.isSensor = true;
-    bodyDef.type = b2Body.b2_staticBody;
-    // Loop through zones from the level description
-    /*
-    for (i in level.zones) {
-      var zone = level.zones[i];
-      // Implement a switch here for type?
-      fixDef.shape.SetAsBox(zone.w || 1, zone.h || 1);
-      bodyDef.position.Set(zone.x, zone.y);//);
-      bodyDef.angle = zone.a || 0;
-      entity = buildEntity();
-
-      // Attach any relevant scripts to the zones
-      switch (zone.type) {
-        case 'checkpoint':
-          entity.scripts.register(voidjs.scripts.checkpoint);
-          break;
-        case 'end':
-          entity.scripts.register(voidjs.scripts.finish);
-          break;
-        default:
-          // Nothing
-          break;
-      }
-      entity.style.stroke = 0;
-      entity.style.fill = '#444';
-      entities[entity.id] = entity;
-    }
-    // Add collectibles to the level
-    var bleh = function(){voidjs.audio.play('collect');};
-    for (i in level.collectibles) {
-      var collectible = level.collectibles[i];
-      fixDef.shape.SetAsBox(collectible.w || 0.1, collectible.h || 0.1);
-      bodyDef.position.Set(collectible.x, collectible.y);//);
-      bodyDef.angle = collectible.a || 0;
-      entity = buildEntity();
-      entity.style.fill = '#F09';
-      entity.scripts.register(voidjs.scripts.collectible);
-      entity.scripts.register(bleh);
-      // Attach any relevant scripts to the collectibles
-      // Collectible depend on modules
-      // Simple shard:
-      // - Style
-      // - Size
-      // - Script
-      // - - Active
-      // - - Passive
-      entities[entity.id] = entity;
-    }
-
-    // Create some objects
-    var start = level.zones[0];
-    bodyDef.type = b2Body.b2_dynamicBody;
-    fixDef.shape.SetAsBox(0.2, 0.2);
-    fixDef.isSensor = false;
-    /*
-    bodyDef.position = new b2Vec2(start.x,start.y);
-    bodyDef.linearDamping = 10;
-    var ship = buildEntity();
-
-    ship.style.fill = '#fff';
-    ship.style.stroke = false;
-    voidjs.player = ship;
-    entities[ship.id] = ship;
-    ship.checkpoint = false;
-    ship.isPlayer = true;
-    ship.active_scripts = vcore.scripts();
-    ship.kill = function(){
-      ship.SetActive(false);
-      ship.active_scripts.register(voidjs.scripts.spawner());
-    };
-    bodyDef.linearDamping = 2;
-    */
-
-    // Make walls
-    /*
-    bodyDef.type = b2Body.b2_staticBody;
-    for (i in level.walls) {
-      var wall = level.walls[i];
-      if (wall.length == 2) {
-        wall.x = wall[0];
-        wall.y = wall[1];
-        wall.h = 0.5; wall.w = 0.5;
-      }
-      // Implement a swtich here for type?
-      fixDef.shape.SetAsBox(wall.w, wall.h);
-      bodyDef.position.Set(wall.x, wall.y);//);
-      bodyDef.angle = wall.a || 0;
-      entity = buildEntity();
-      entity.style.fill = '#222';
-      entity.style.stroke = '#444';
-      entities[entity.id] = entity;
-    }
-    */
 
     world.SetContactListener(voidjs.listener);
 
-    vec();
+    voidjs.entityCreator.init();
+    voidjs.entityCreator.buildLevel(voidjs.levels[chapter]);
     voidjs.ticker = window.setInterval(voidjs.update, voidjs.fps);
 
     // Helpers
@@ -362,10 +325,6 @@ var voidjs = {
       entity.style = {stroke:'rgb('+rCol(200)+','+(0)+','+rCol(0)+')'};
       entity.scripts = vcore.scripts();
       return entity;
-    }
-    function rCol (off) {
-      off = off?off:0;
-      return Math.round(Math.random()*(255-off)+off).toString();
     }
   },
   helpers : {
@@ -395,6 +354,7 @@ var voidjs = {
 voidjs.fullscreen = function() {
   voidjs.canvas.width = window.innerWidth;
   voidjs.canvas.height = window.innerHeight;
+  voidjs.scale = voidjs.canvas.height * 45 / 768;
 };
 window.addEventListener('resize', voidjs.fullscreen, false);
 voidjs.fullscreen();

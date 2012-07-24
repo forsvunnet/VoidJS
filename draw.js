@@ -3,12 +3,40 @@ var is_array = function (value) {
         typeof value === 'object' &&
         value.constructor === Array;
 };
+voidjs.camera = {
+  eq: {0:{x:0, y:0}},
+  shakers: {},
+  shake: function(camera, magnitude, duration) {
+    var shakers = voidjs.camera.shakers;
+    shakers[camera] = [magnitude, duration, duration];
+  },
+  update: function() {
+    var shakers = voidjs.camera.shakers;
+    var eq = voidjs.camera.eq;
+    for (var camera in shakers) {
+      var shaker = shakers[camera];
+      if (shaker[2] > 0) {
+        var r = lerp(0, shaker[0], shaker[2] / shaker[1]);
+        eq[camera] = {
+          x: Math.random() * r * 2 - r,
+          y: Math.random() * r * 2 - r
+        };
+        shaker[2] -= voidjs.fps;
+      } else {
+        delete shakers[camera];
+        eq[camera] = {x:0, y:0};
+      }
+    }
+  }
+};
+//voidjs.camera.shake(0, 5, 1000);
 
-voidjs.draw = function(){
+voidjs.draw = function() {
   if (voidjs.time) {
     var fps = 1000 / (new Date().getTime() - voidjs.time);
     document.getElementById('fps').innerHTML = fps + '<br>' + voidjs.player.life;
   }
+  voidjs.camera.update();
   voidjs.time = new Date().getTime();
   var canvas = voidjs.canvas;
   var entities = voidjs.entities;
@@ -19,8 +47,9 @@ voidjs.draw = function(){
 
   var ship_pos = voidjs.player.GetPosition();
   var plate = new b2AABB();
-  plate.lowerBound = {x: ship_pos.x - 5, y: ship_pos.y - 5};
-  plate.upperBound = {x: ship_pos.x + 5, y: ship_pos.y + 5};
+  var area = 9;
+  plate.lowerBound = {x: ship_pos.x - area, y: ship_pos.y - area};
+  plate.upperBound = {x: ship_pos.x + area, y: ship_pos.y + area};
   var que = {};
   layers = [];
   voidjs.world.QueryAABB(function (fixture){
@@ -38,28 +67,66 @@ voidjs.draw = function(){
   for (var i in layers) {
     var layer = layers[i];
     for (var body in que[layer]){
-      que[layer][body].draw();
+      //que[layer][body].draw(camera);
+      que[layer][body].draw(0);
     }
   }
 };
-voidjs.stencil.drawBox = function () {
-  // this = entity from which the draw is called
-  var ctx = voidjs.ctx;
-  var scale = voidjs.scale || 30;
+voidjs.stencil.drawEntity = function (camera) {
   var style = this.style || {stroke:'red'};
-  var vertices = this.vertices;
   var rotation = this.GetAngle();
-  var boxV2 = this.GetPosition();
+  var entity_pos = this.GetPosition();
+  var position;
+  //var ship_pos = voidjs.player[camera].GetPosition();
   var ship_pos = voidjs.player.GetPosition();
+  var eq = voidjs.camera.eq;
+  var scale = voidjs.scale || 30;
+  var cpos = {
+    //x: voidjs.canvas[camera].width/2/scale - ship_pos.x + eq[camera].x,
+    x:  (voidjs.canvas.width/2/scale) - ship_pos.x + eq[camera].x,
+    y: (voidjs.canvas.height/2/scale) - ship_pos.y + eq[camera].y
+  };
+  if (style.art) {
+    for (var i in style.art) {
+      position = {
+        x: entity_pos.x + cpos.x,
+        localX: style.art[i].position.x,
+        y: entity_pos.y + cpos.y,
+        localY: style.art[i].position.y
+      };
+      rotation = {
+        angle: rotation,
+        localAngle: style.art[i].angle
+      };
+      voidjs.stencil.drawVerts(
+        style.art[i].fill,
+        style.art[i].stroke,
+        style.art[i].vertices,
+        position,
+        rotation
+      );
+    }
+    return;
+  }
+  // this = entity from which the draw is called
+  var vertices = this.vertices;
   // Make new object so we dont change the position of an entity
-  var position = {
-    x : boxV2.x - ship_pos.x + 10,
-    y : boxV2.y - ship_pos.y + 200/30
+  position = {
+    x : entity_pos.x + cpos.x,
+    y : entity_pos.y + cpos.y
   };
   //position.y += voidjs.entities.player.y || 0;
   // All parts in the bag?
+
+  voidjs.stencil.drawVerts(style.fill, style.stroke, vertices, position, rotation);
+};
+voidjs.stencil.drawVerts = function (fill, stroke, vertices, position, rotation) {
+  var ctx = voidjs.ctx;
+  var scale = voidjs.scale || 30;
   ctx.save();
   ctx.beginPath();
+  var angle = rotation.angle || rotation;
+  var localAngle = rotation.localAngle || 0;
   // Get started on the vertices:
   // To center of entity
   ctx.translate(
@@ -67,7 +134,17 @@ voidjs.stencil.drawBox = function () {
     position.y * scale
   );
   //Rotate the canvas
-  ctx.rotate(rotation);
+  ctx.rotate(angle);
+
+  if (position.localX !== undefined && position.localY !== undefined) {
+    ctx.translate(
+      position.localX * scale,
+      position.localY * scale
+    );
+  }
+  if (localAngle) {
+    ctx.rotate(localAngle);
+  }
   ctx.moveTo(
     (vertices[0].x) * scale,
     (vertices[0].y) * scale
@@ -78,18 +155,18 @@ voidjs.stencil.drawBox = function () {
       (vertices[i].y) * scale
     );
   }
-  ctx.translate(
+  /*ctx.translate(
     -position.x * scale,
     -position.y * scale
-  );
+  );*/
   // Translation of coordinates:
   ctx.closePath();
-  if (style.stroke) {
-    ctx.strokeStyle = style.stroke;
+  if (stroke) {
+    ctx.strokeStyle = stroke;
     ctx.stroke();
   }
-  if (style.fill) {
-    ctx.fillStyle = style.fill;
+  if (fill) {
+    ctx.fillStyle = fill;
     ctx.fill();
   }
   ctx.restore();
