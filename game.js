@@ -140,6 +140,7 @@ voidjs.scripts.collectible = function(args){
         vel.y += bvel.y;
         voidjs.entityCreator.create('particle', [pos, vel, '#FFFFFF', 2, [1000, 2000], 0.1]);
       }
+      voidjs.audio.play('collect');
     voidjs.world.RemoveBody(sensor);
   }
 };

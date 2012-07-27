@@ -8,18 +8,13 @@ voidjs.control.keydown = function(e) {
 voidjs.control.keyup = function(e) {
   var key = voidjs.key;
   if(key.fire) {
-    var p = voidjs.player.m_xf.position;
-    voidjs.entityCreator.prepare('sentry', [p.x, p.y, 0]);
-    var entity = voidjs.entityCreator.build();
-    voidjs.entities[entity.id] = entity;
-    console.log(p);
-    console.log(entity);
+
   }
   if(key.select) {
-    var vel = voidjs.player.GetLinearVelocity();
-    var s1 = Math.sqrt(vel.x * vel.x + vel.y * vel.y);
-    console.log(vel);
-    console.log(s1);
+    //var vel = voidjs.player.GetLinearVelocity();
+    //var s1 = Math.sqrt(vel.x * vel.x + vel.y * vel.y);
+    //console.log(vel);
+    //console.log(s1);
   }
 
   voidjs.control.toggle(e.keyCode, false);

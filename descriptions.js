@@ -206,6 +206,7 @@ voidjs.descriptions.bullet = {
         if (body.isPlayer && body.hasCamera) {
           var camera = body.playerNumber || 0;
           voidjs.camera.shake(camera, 0.2, 250);
+          voidjs.audio.play('hurt', 1);
         }
         // Goodbye bullet:
         voidjs.world.RemoveBody(bullet);
