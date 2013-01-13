@@ -9,7 +9,7 @@ voidjs.draw = function(){
   var entities = voidjs.entities;
   var ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  this.ctx = ctx;
+  voidjs.ctx = ctx;
   for (var i in entities) {
     // Retrieve and draw entity/entities
     if (is_array(entities[i])) {
@@ -25,7 +25,7 @@ voidjs.draw = function(){
     }
   }
 };
-voidjs.drawBox = function () {
+voidjs.stencil.drawBox = function () {
   // this = entity from which the draw is called
   var ctx = voidjs.ctx;
   var scale = voidjs.scale || 30;
@@ -64,4 +64,37 @@ voidjs.drawBox = function () {
   ctx.strokeStyle = style;
   ctx.stroke();
   ctx.restore();
+};
+voidjs.stencil.drawString = function (y) {
+  // this is refering to the menu which calls this function
+  var vertices, x = 1;
+  //console.log(this.title);
+  var letters = this.title.split('');
+  for (var i in letters) {
+    var letter = letters[i];
+    voidjs.stencil.drawLetter(letter, x ,y, this);
+    x += 0.8;
+  }
+
+};
+voidjs.stencil.drawLetter = function (letter, x, y, obj) {
+  var ctx = voidjs.ctx;
+  var scale = voidjs.scale || 30;
+  var style = obj.style || "red";
+  var vertices = voidjs.alphabet[letter];
+  //var vertices = voidjs.alphabet[letter];
+  ctx.beginPath();
+  ctx.moveTo(
+    (x + vertices[0].x*2/3) * scale,
+    (y + vertices[0].y) * scale
+  );
+  for (var i = 1; i < vertices.length; i++) {
+    ctx.lineTo(
+      (x + vertices[i].x*2/3) * scale,
+      (y + vertices[i].y) * scale
+    );
+  }
+  ctx.closePath();
+  ctx.strokeStyle = style;
+  ctx.stroke();
 };

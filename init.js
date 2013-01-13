@@ -4,6 +4,11 @@ function lerp(s,e,t) {
   }
   return (s+t*(e-s));
 }
+// @TODO:
+// 0. nodejs
+// 1. Level rendering / selection
+// 2. Camera to follow player
+// 3. Collectibles
 var voidjs = {
   canvas : document.getElementById('canvas'),
   key : {
@@ -12,60 +17,38 @@ var voidjs = {
     up:     false,
     down:   false
   },
+  stencil : {},
+  fps: 1000/60,
   active_entities : {},
   entities  : {},
   scripts   : {},
   world     : undefined,
-  mouse     : undefined,
+  control   : {mouse: {active:false}},
   init:function() {
     // Init only happens once, the other functions can happen many times
-    var canvasPosition = voidjs.helpers.getElementPosition(voidjs.canvas);
-    document.addEventListener("keydown", voidjs.keydown);
-    document.addEventListener("keyup", voidjs.keyup);
-    // Mouse
-    var mouse = {
-      x:undefined,
-      y:undefined,
-      active:false
-    };
-    voidjs.mouse = mouse;
-    document.addEventListener("mousedown", function(e) {
-      handleMouseMove(e);
-      document.addEventListener("mousemove", handleMouseMove, true);
-    }, true);
-     
-    document.addEventListener("mouseup", function() {
-      document.removeEventListener("mousemove", handleMouseMove, true);
-      mouse.active = false;
-    }, true);
-     
-    function handleMouseMove(e) {
-      mouse.x = (e.clientX - canvasPosition.x) / 30;
-      mouse.y = (e.clientY - canvasPosition.y) / 30;
-      mouse.active = true;
-    }
+    // Register all even listeners here
+    document.addEventListener("keydown", voidjs.control.keydown);
+    document.addEventListener("keyup", voidjs.control.keyup);
+    document.addEventListener("mouseup", voidjs.control.mouseup);
+    document.addEventListener("mousedown", voidjs.control.mousedown);
+    document.addEventListener("mousemove", voidjs.control.mousemove);
+    
     var scenes = {
       game: this.game,
-      menu: this.menu
+      menu: this.menu.show
     };
-    this.goto = function(scene){
-      scenes[scene]();
+    // Call a scene function / go to a scene
+    this.goto = function(scene, part) {
+      // Scene is the menu point
+      // Part allows us to pass a parameter to the menu point
+      // ie. game could be the menu point and then the part could be the level
+      scenes[scene](part);
     };
+    // Open her up, start at the menu
     this.goto('menu');
   },
-  menu:function(){
-    voidjs.reset();
-    voidjs.goto('game');
-  },
-  reset: function () {
-    voidjs.world = undefined;
-    voidjs.entities = {};
-    voidjs.active_entities = {};
-    if (voidjs.ticker) {
-      window.clearInterval(voidjs.ticker);
-    }
-  },
-  game:function() {
+  game:function(chapter) {
+    chapter = chapter || 0;
     // Set up variables
     var b2Vec2            = Box2D.Common.Math.b2Vec2,
         b2AABB            = Box2D.Collision.b2AABB,
@@ -82,44 +65,42 @@ var voidjs = {
     var gravity = new b2Vec2(0, 0);
     var world = new b2World(gravity, true);
     voidjs.world = world;
-    var entities = voidjs.entities;
-    var active_entities = voidjs.active_entities;
-    // Fixtures
+    var entities = {};
+    voidjs.entities = entities;
+    var active_entities = {};
+    voidjs.active_entities = active_entities;
+
+    // Fixture
     var fixDef = new b2FixtureDef();
     fixDef.density = 1.0;
     fixDef.friction = 0.5;
     fixDef.restitution = 0.2;
+    fixDef.shape = new b2PolygonShape();
 
     // Rigidbodies
     var bodyDef = new b2BodyDef();
     bodyDef.linearDamping = 2;
     bodyDef.angularDamping = 2;
 
+    // Build level
+    var level = voidjs.levels[chapter];
     // Make walls
-    // this is all level code and should be abstracted
-    bodyDef.type = b2Body.b2_staticBody;
-    fixDef.shape = new b2PolygonShape();
-    fixDef.shape.SetAsBox(20, 2);
-    bodyDef.position.Set(10, 400 / 30 + 1.8);
     entities.walls = [];
-    entities.walls.push(buildEntity());
-    bodyDef.position.Set(10, -1.8);
-    entities.walls.push(buildEntity());
-    fixDef.shape.SetAsBox(2, 14);
-    bodyDef.position.Set(-1.8, 13);
-    entities.walls.push(buildEntity());
-    bodyDef.position.Set(21.8, 13);
-    entities.walls.push(buildEntity());
-    fixDef.shape.SetAsBox(2, 2);
-    bodyDef.position.Set(10, 200/30);
-    bodyDef.angle = Math.PI/4;
-    entities.walls.push(buildEntity());
-    bodyDef.angle = 0;
+    bodyDef.type = b2Body.b2_staticBody;
+    for (var i in level.walls) {
+      var wall = level.walls[i];
+      // Implement a swtich here for type?
+      fixDef.shape.SetAsBox(wall.w, wall.h);
+      bodyDef.position.Set(wall.x, wall.y);//);
+      bodyDef.angle = wall.a || 0;
+      entities.walls.push(buildEntity());
+    }
 
     // Create some objects
+    var start = level.zones[0];
     bodyDef.type = b2Body.b2_dynamicBody;
     fixDef.shape.SetAsBox(0.2, 0.2);
-    bodyDef.position = new b2Vec2(1,1);
+    bodyDef.position = new b2Vec2(start.x,start.y);
     
     var ship = buildEntity();
     entities.player = ship;
@@ -136,46 +117,32 @@ var voidjs = {
     fixDef.shape.SetAsBox(1, 1);
     fixDef.isSensor = true;
     bodyDef.type = b2Body.b2_staticBody;
-
-    // Checkpoints:
-    bodyDef.position.Set(3, 10);
-    var zone = buildEntity();
-    zone.scripts.register(voidjs.scripts.checkpoint);
-    entities.zones.push(zone);
-    // Finish line:
-    bodyDef.position.Set(18, 10);
-    zone = buildEntity();
-    zone.scripts.register(voidjs.scripts.finish);
-    entities.zones.push(zone);
-
-
-    
-    var listener = new b2ContactListener();
-    listener.BeginContact = function(contact) {
-      var fixA = contact.GetFixtureA();
-      var fixB = contact.GetFixtureB();
-      var sensor = false, body;
-      // Check if one of the bodies is a sensor:
-      if (fixA.IsSensor()) {
-        sensor = fixA.GetBody();
-        body = fixB.GetBody();
-      } else if (fixB.IsSensor()){
-        sensor = fixB.GetBody();
-        body = fixA.GetBody();
+    for (i in level.zones) {
+      var zone = level.zones[i];
+      // Implement a swtich here for type?
+      fixDef.shape.SetAsBox(zone.w || 1, zone.h || 1);
+      bodyDef.position.Set(zone.x, zone.y);//);
+      bodyDef.angle = zone.a || 0;
+      var entity = buildEntity();
+      switch (zone.type) {
+        case 'checkpoint':
+          entity.scripts.register(voidjs.scripts.checkpoint);
+          break;
+        case 'end':
+          entity.scripts.register(voidjs.scripts.finish);
+          break;
+        default:
+          // Nothing
+          break;
       }
-      if (sensor !== false) {
-        sensor.scripts.call(body, sensor);
-      }
+      entities.zones.push(entity);
+    }
 
-      // If not then maybe play a sound at collision?
-      //....
-    };
-    world.SetContactListener(listener);
-     
-    voidjs.ticker = window.setInterval(voidjs.update, 1000 / 60);
+    world.SetContactListener(voidjs.listener);
     
+    voidjs.ticker = window.setInterval(voidjs.update, voidjs.fps);
 
-    //helpers
+    // Helpers
 
     function buildEntity () {
       var entity = world.CreateBody(bodyDef);
@@ -187,7 +154,7 @@ var voidjs = {
           fixDef.shape.m_vertices[i].y
         ));
       }
-      entity.draw = voidjs.drawBox;
+      entity.draw = voidjs.stencil.drawBox;
       entity.style = 'rgb('+rCol(200)+','+(0)+','+rCol(0)+')';
       entity.scripts = function() {
         // This is a nifty way of letting entities carry their own scripts

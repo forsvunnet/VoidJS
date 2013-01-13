@@ -1,0 +1,3 @@
+voidjs.camera = function () {
+
+};

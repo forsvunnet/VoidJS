@@ -1,7 +1,7 @@
 // Update
 voidjs.update = function () {
   voidjs.draw();
-  var mouse = voidjs.mouse,
+  var mouse = voidjs.control.mouse,
       world = voidjs.world,
       key = voidjs.key,
       ship = voidjs.entities.player,
@@ -94,6 +94,7 @@ voidjs.scripts.finish = function(args){
   var body = args[0];
   var sensor = args[1];
   if (body.isPlayer) {
-    voidjs.goto('menu');
+    window.clearInterval(voidjs.ticker);
+    voidjs.goto('menu', 'LevelComplete');
   }
 };
