@@ -32,8 +32,14 @@ voidjs.stencil.drawBox = function () {
   var style = this.style || 'red';
   var vertices = this.vertices;
   var rotation = this.GetAngle();
-  var position = this.GetPosition();
-
+  var boxV2 = this.GetPosition();
+  ship_pos = voidjs.entities.player.GetPosition();
+  // Make new object so we dont change the position of an entity
+  var position = {
+    x : boxV2.x - ship_pos.x + 10,
+    y : boxV2.y - ship_pos.y + 200/30
+  };
+  //position.y += voidjs.entities.player.y || 0;
   // All parts in the bag?
   ctx.save();
   ctx.beginPath();

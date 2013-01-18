@@ -5,9 +5,9 @@ function lerp(s,e,t) {
   return (s+t*(e-s));
 }
 // @TODO:
-// 0. nodejs
-// 1. Level rendering / selection
-// 2. Camera to follow player
+// 0. 5% - nodejs
+// 1. 80% - Level rendering / selection
+// 2. 80% - Camera to follow player
 // 3. Collectibles
 var voidjs = {
   canvas : document.getElementById('canvas'),
