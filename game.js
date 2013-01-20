@@ -87,6 +87,7 @@ voidjs.scripts.checkpoint = function(args){
     console.log('Checkpoint Activated');
   }
 };
+
 /**
  * Finish line
  */
@@ -96,5 +97,22 @@ voidjs.scripts.finish = function(args){
   if (body.isPlayer) {
     window.clearInterval(voidjs.ticker);
     voidjs.goto('menu', 'LevelComplete');
+  }
+};
+
+/**
+ * Collectible self-destruct
+ */
+
+
+voidjs.scripts.collectible = function(args){
+  var body = args[0];
+  var sensor = args[1];
+  if (body.isPlayer) {
+
+  voidjs.world.RemoveBody(body);
+  //sensor = null;;
+  var IsLocked = function(){return false;};
+  console.log(sensor);
   }
 };

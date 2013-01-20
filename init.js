@@ -65,6 +65,10 @@ var voidjs = {
     var gravity = new b2Vec2(0, 0);
     var world = new b2World(gravity, true);
     voidjs.world = world;
+    world.RemoveBody = function (body) {
+      // @TODO: Not working :(
+      world.DestroyBody(body);
+    };
     var entities = {};
     voidjs.entities = entities;
     var active_entities = {};
@@ -84,6 +88,7 @@ var voidjs = {
 
     // Build level
     var level = voidjs.levels[chapter];
+    var entity;
     // Make walls
     entities.walls = [];
     bodyDef.type = b2Body.b2_staticBody;
@@ -117,19 +122,45 @@ var voidjs = {
     fixDef.shape.SetAsBox(1, 1);
     fixDef.isSensor = true;
     bodyDef.type = b2Body.b2_staticBody;
+    // Loop through zones from the level description
     for (i in level.zones) {
       var zone = level.zones[i];
       // Implement a swtich here for type?
       fixDef.shape.SetAsBox(zone.w || 1, zone.h || 1);
       bodyDef.position.Set(zone.x, zone.y);//);
       bodyDef.angle = zone.a || 0;
-      var entity = buildEntity();
+      entity = buildEntity();
+
+      // Attach any relevant scripts to the zones
       switch (zone.type) {
         case 'checkpoint':
           entity.scripts.register(voidjs.scripts.checkpoint);
           break;
         case 'end':
           entity.scripts.register(voidjs.scripts.finish);
+          break;
+        default:
+          // Nothing
+          break;
+      }
+      entities.zones.push(entity);
+    }
+    // Add collectibles to the level
+    for (i in level.collectibles) {
+      var collectible = level.collectibles[i];
+      fixDef.shape.SetAsBox(collectible.w || 0.1, collectible.h || 0.1);
+      bodyDef.position.Set(collectible.x, collectible.y);//);
+      bodyDef.angle = collectible.a || 0;
+      entity = buildEntity();
+
+      entity.scripts.register(voidjs.scripts.collectible);
+      // Attach any relevant scripts to the collectibles
+      switch (collectible.type) {
+        case 'checkpoint':
+          //entity.scripts.register(voidjs.scripts.checkpoint);
+          break;
+        case 'end':
+          //entity.scripts.register(voidjs.scripts.finish);
           break;
         default:
           // Nothing
