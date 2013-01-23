@@ -20,6 +20,8 @@ var voidjs = {
   stencil : {},
   fps: 1000/60,
   active_entities : {},
+  destroy_entities: [],
+  //@TODO : turn entities into an array so we can remove all reference to its object easily
   entities  : {},
   scripts   : {},
   world     : undefined,
@@ -66,8 +68,15 @@ var voidjs = {
     var world = new b2World(gravity, true);
     voidjs.world = world;
     world.RemoveBody = function (body) {
-      // @TODO: Not working :(
-      world.DestroyBody(body);
+      if (!world.IsLocked()) {
+        // Trigger death script?
+        // Destroy the body
+        world.DestroyBody(body);
+        // & clear refences to this body:
+        // ????
+      } else {
+        voidjs.destroy_entities.push(body);
+      }
     };
     var entities = {};
     voidjs.entities = entities;

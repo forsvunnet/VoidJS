@@ -5,6 +5,7 @@ voidjs.update = function () {
       world = voidjs.world,
       key = voidjs.key,
       ship = voidjs.entities.player,
+      destroy_entities = voidjs.destroy_entities,
       active_entities = voidjs.active_entities;
   var b2Vec2 = Box2D.Common.Math.b2Vec2;
   var shipAt = ship.GetPosition();
@@ -28,6 +29,12 @@ voidjs.update = function () {
       active_entities[i].scripts.call();
     }
   }
+  for (i in destroy_entities) {
+    world.RemoveBody(destroy_entities[i]);
+  }
+  // Clear array
+  destroy_entities.length = 0;
+
   ship.ApplyTorque(0.02);
   var direction = new b2Vec2(0,0);
   direction.x +=
@@ -109,10 +116,10 @@ voidjs.scripts.collectible = function(args){
   var body = args[0];
   var sensor = args[1];
   if (body.isPlayer) {
-
-  voidjs.world.RemoveBody(body);
-  //sensor = null;;
-  var IsLocked = function(){return false;};
-  console.log(sensor);
+    voidjs.world.RemoveBody(sensor);
   }
+  //sensor = null;;
+  /*var IsLocked = function(){return false;};
+  console.log(sensor);
+  }*/
 };
