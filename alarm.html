@@ -1,0 +1,26 @@
+<html>
+ <head>
+  <meta charset="UTF-8" />
+  <title>Void Game</title>
+ </head>
+ <body onload="alarm.init();">
+ <script type="text/javascript">
+  var alarm = {};
+  alarm.init = function (){
+    alarm.sound = new Audio('audio/Powerup2.wav');
+    //alarm.sound.play();
+    alarm.sound.loop = true;
+    var seconds = 0;
+    var loop = setInterval(function(){
+      console.log(seconds);
+      if (seconds > 60 * 40) {
+        alarm.sound.play();
+        console.log('ALARM!');
+        clearInterval(loop);
+      }
+
+      seconds++;
+    }, 1000);
+  };
+ </script>
+</html>

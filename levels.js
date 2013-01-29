@@ -15,7 +15,7 @@ voidjs.levels = [
       {type: 'end', x: 17, y: 10}
     ],
     collectibles : [
-      {x:1,y:1}
+      {type:'shard', x:1,y:1}
     ]
   },{ // Level 2
     walls : [

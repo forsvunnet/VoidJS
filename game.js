@@ -4,7 +4,7 @@ voidjs.update = function () {
   var mouse = voidjs.control.mouse,
       world = voidjs.world,
       key = voidjs.key,
-      ship = voidjs.entities.player,
+      ship = voidjs.player,
       active_entities = voidjs.active_entities;
   var b2Vec2 = Box2D.Common.Math.b2Vec2;
   var shipAt = ship.GetPosition();
@@ -110,9 +110,14 @@ voidjs.scripts.collectible = function(args){
   var sensor = args[1];
   if (body.isPlayer) {
 
-  voidjs.world.RemoveBody(body);
-  //sensor = null;;
-  var IsLocked = function(){return false;};
-  console.log(sensor);
+    //sensor = null;;
+    //voidjs.world.m_flags = 1;//voidjs.world.IsLocked = function(){return false;};
+    voidjs.world.DestroyBody(sensor);
+
+    //@TODO : remove entity
+    
+    console.log('dunnit');
+    delete voidjs.entities[sensor.id];
+  
   }
 };

@@ -33,7 +33,7 @@ voidjs.stencil.drawBox = function () {
   var vertices = this.vertices;
   var rotation = this.GetAngle();
   var boxV2 = this.GetPosition();
-  ship_pos = voidjs.entities.player.GetPosition();
+  ship_pos = voidjs.player.GetPosition();
   // Make new object so we dont change the position of an entity
   var position = {
     x : boxV2.x - ship_pos.x + 10,

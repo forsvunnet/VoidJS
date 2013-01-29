@@ -4,11 +4,16 @@ function lerp(s,e,t) {
   }
   return (s+t*(e-s));
 }
+var millis = function () {
+  return new Date().getTime();
+};
 // @TODO:
-// 0. 5% - nodejs
+// 0. 01% - nodejs
 // 1. 80% - Level rendering / selection
 // 2. 80% - Camera to follow player
-// 3. Collectibles
+// 3. 20% - Collectibles
+// 4. 20% - Sounds
+// 5. 00% - particles
 var voidjs = {
   canvas : document.getElementById('canvas'),
   key : {
@@ -17,6 +22,13 @@ var voidjs = {
     up:     false,
     down:   false
   },
+  entity_index : function() {
+    var index = 391;
+    return function () {
+      index++;
+      return index;
+    };
+  }(),
   stencil : {},
   fps: 1000/60,
   active_entities : {},
@@ -90,7 +102,6 @@ var voidjs = {
     var level = voidjs.levels[chapter];
     var entity;
     // Make walls
-    entities.walls = [];
     bodyDef.type = b2Body.b2_staticBody;
     for (var i in level.walls) {
       var wall = level.walls[i];
@@ -98,7 +109,8 @@ var voidjs = {
       fixDef.shape.SetAsBox(wall.w, wall.h);
       bodyDef.position.Set(wall.x, wall.y);//);
       bodyDef.angle = wall.a || 0;
-      entities.walls.push(buildEntity());
+      entity = buildEntity();
+      entities[entity.id] = entity;
     }
 
     // Create some objects
@@ -108,7 +120,8 @@ var voidjs = {
     bodyDef.position = new b2Vec2(start.x,start.y);
     
     var ship = buildEntity();
-    entities.player = ship;
+    voidjs.player = ship;
+    entities[ship.id] = ship;
     active_entities.player = ship;
     ship.checkpoint = false;
     ship.isPlayer = true;
@@ -118,7 +131,6 @@ var voidjs = {
     };
 
     // Make some zones
-    entities.zones = [];
     fixDef.shape.SetAsBox(1, 1);
     fixDef.isSensor = true;
     bodyDef.type = b2Body.b2_staticBody;
@@ -143,9 +155,10 @@ var voidjs = {
           // Nothing
           break;
       }
-      entities.zones.push(entity);
+      entities[entity.id] = entity;
     }
     // Add collectibles to the level
+    //var bleh = function(){voidjs.audio.play('collect');};
     for (i in level.collectibles) {
       var collectible = level.collectibles[i];
       fixDef.shape.SetAsBox(collectible.w || 0.1, collectible.h || 0.1);
@@ -154,6 +167,7 @@ var voidjs = {
       entity = buildEntity();
 
       entity.scripts.register(voidjs.scripts.collectible);
+      entity.scripts.register(bleh);
       // Attach any relevant scripts to the collectibles
       switch (collectible.type) {
         case 'checkpoint':
@@ -166,7 +180,7 @@ var voidjs = {
           // Nothing
           break;
       }
-      entities.zones.push(entity);
+      entities[entity.id] = entity;
     }
 
     world.SetContactListener(voidjs.listener);
@@ -174,9 +188,9 @@ var voidjs = {
     voidjs.ticker = window.setInterval(voidjs.update, voidjs.fps);
 
     // Helpers
-
     function buildEntity () {
       var entity = world.CreateBody(bodyDef);
+      entity.id = millis() + '_' + voidjs.entity_index();
       entity.CreateFixture(fixDef);
       entity.vertices = [];
       for (var i in fixDef.shape.m_vertices) {
