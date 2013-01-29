@@ -6,8 +6,11 @@ voidjs.menu.show = function(part){
       console.log('Congratulations');
       elements.push({
         title: 'play',
-        action: function(){
-          voidjs.goto('game', 1);
+        action: function() {
+          chapter = voidjs.chapter;
+          chapter = chapter<2 ? chapter+1 : 0;
+          voidjs.goto('game', chapter);
+          clearInterval(update);
         }
       });
       break;

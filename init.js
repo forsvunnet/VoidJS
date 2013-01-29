@@ -63,6 +63,7 @@ var voidjs = {
   },
   game:function(chapter) {
     chapter = chapter || 0;
+    voidjs.chapter = chapter;
     // Set up variables
     var b2Vec2            = Box2D.Common.Math.b2Vec2,
         b2AABB            = Box2D.Collision.b2AABB,
@@ -108,6 +109,7 @@ var voidjs = {
     bodyDef.angularDamping = 2;
 
     // Build level
+    console.log(chapter);
     var level = voidjs.levels[chapter];
     var entity;
     // Make walls
@@ -167,7 +169,7 @@ var voidjs = {
       entities[entity.id] = entity;
     }
     // Add collectibles to the level
-    //var bleh = function(){voidjs.audio.play('collect');};
+    var bleh = function(){voidjs.audio.play('collect');};
     for (i in level.collectibles) {
       var collectible = level.collectibles[i];
       fixDef.shape.SetAsBox(collectible.w || 0.1, collectible.h || 0.1);
