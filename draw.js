@@ -29,7 +29,7 @@ voidjs.stencil.drawBox = function () {
   // this = entity from which the draw is called
   var ctx = voidjs.ctx;
   var scale = voidjs.scale || 30;
-  var style = this.style || 'red';
+  var style = this.style || {stroke:'red'};
   var vertices = this.vertices;
   var rotation = this.GetAngle();
   var boxV2 = this.GetPosition();
@@ -67,8 +67,14 @@ voidjs.stencil.drawBox = function () {
   );
   // Translation of coordinates:
   ctx.closePath();
-  ctx.strokeStyle = style;
-  ctx.stroke();
+  if (style.stroke) {
+    ctx.strokeStyle = style.stroke;
+    ctx.stroke();
+  }
+  if (style.fill) {
+    ctx.fillStyle = style.fill;
+    ctx.fill();
+  }
   ctx.restore();
 };
 voidjs.stencil.drawString = function (y) {

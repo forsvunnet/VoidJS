@@ -8,12 +8,44 @@ var millis = function () {
   return new Date().getTime();
 };
 // @TODO:
+// Try to focus on essential functions.
+// Especially important are features that allow for
+// writing game rules and altering game mechanics.
+//
 // 0. 01% - nodejs
-// 1. 80% - Level rendering / selection
-// 2. 80% - Camera to follow player
-// 3. 20% - Collectibles
+//        * RPC
+//        * Active entity positions (Non-sleeping)
+//        * Bullets
+//
+// 1. 90% - Level rendering / selection
+//        * JSON format works well. Refractor to draw in layers.
+//        * Level format should allow entities to referrence other enitities.
+//          (Maybe some sort of replaceable ID. ie level format use one ID system, game another)
+//
+// 2. 95% - Camera to follow player
+//        * Smoothing required. Non-essential
+//
+// 3. 80% - Zones
+//        * Custom scriptable zone
+//
+// 4. 40% - Collectibles
+//        * Let modules control size/shape + scripts
+//
+// - - -  - Note on Entities
+//        * All entities should be extensible through modules.
+//        * Map what differs between the entities and go from there.
+//          I believe entities are fundementally different in nature and
+//          should hence be kept as such, but I could be wrong.
+//        * Correlation between level description and modules are quite essential.
+//          Should levels include information about their module dependency?
+//
 // 4. 20% - Sounds
-// 5. 00% - particles
+//        * Might have to be refractored. Lacks consistency.
+//
+// 5. 01% - Particles
+//        * box2d = entity. Ignore everything but walls? - non-essential.
+//        * Non box2d = non entity. Requires own "physics"
+//
 var voidjs = {
   canvas : document.getElementById('canvas'),
   key : {
@@ -81,12 +113,12 @@ var voidjs = {
     var world = new b2World(gravity, true);
     voidjs.world = world;
     world.RemoveBody = function (body) {
+      // Helper function to Destroy bodies irrelevant to context.
+      // If the world is locked then send the body to the que for
+      // bodies to be destroyed.
       if (!world.IsLocked()) {
-        // Trigger death script?
         // Destroy the body
         world.DestroyBody(body);
-        // & clear refences to this body:
-        // ????
       } else {
         voidjs.destroy_entities.push(body);
       }
@@ -111,35 +143,8 @@ var voidjs = {
     // Build level
     console.log(chapter);
     var level = voidjs.levels[chapter];
-    var entity;
-    // Make walls
-    bodyDef.type = b2Body.b2_staticBody;
-    for (var i in level.walls) {
-      var wall = level.walls[i];
-      // Implement a swtich here for type?
-      fixDef.shape.SetAsBox(wall.w, wall.h);
-      bodyDef.position.Set(wall.x, wall.y);//);
-      bodyDef.angle = wall.a || 0;
-      entity = buildEntity();
-      entities[entity.id] = entity;
-    }
+    var entity, i;
 
-    // Create some objects
-    var start = level.zones[0];
-    bodyDef.type = b2Body.b2_dynamicBody;
-    fixDef.shape.SetAsBox(0.2, 0.2);
-    bodyDef.position = new b2Vec2(start.x,start.y);
-    
-    var ship = buildEntity();
-    voidjs.player = ship;
-    entities[ship.id] = ship;
-    active_entities.player = ship;
-    ship.checkpoint = false;
-    ship.isPlayer = true;
-    ship.kill = function(){
-      ship.SetActive(false);
-      ship.scripts.register(voidjs.scripts.spawner());
-    };
 
     // Make some zones
     fixDef.shape.SetAsBox(1, 1);
@@ -166,6 +171,8 @@ var voidjs = {
           // Nothing
           break;
       }
+      entity.style.stroke = 0;
+      entity.style.fill = '#444';
       entities[entity.id] = entity;
     }
     // Add collectibles to the level
@@ -176,21 +183,62 @@ var voidjs = {
       bodyDef.position.Set(collectible.x, collectible.y);//);
       bodyDef.angle = collectible.a || 0;
       entity = buildEntity();
-
+      entity.style.fill = '#F09';
       entity.scripts.register(voidjs.scripts.collectible);
       entity.scripts.register(bleh);
       // Attach any relevant scripts to the collectibles
+      // Collectible depend on modules
+      // Simple shard:
+      // - Style
+      // - Size
+      // - Script
+      // - - Active
+      // - - Passive
       switch (collectible.type) {
-        case 'checkpoint':
-          //entity.scripts.register(voidjs.scripts.checkpoint);
+        case 'x1':
+
           break;
-        case 'end':
-          //entity.scripts.register(voidjs.scripts.finish);
+        case 'x2':
+
           break;
         default:
           // Nothing
           break;
       }
+      entities[entity.id] = entity;
+    }
+
+    // Create some objects
+    var start = level.zones[0];
+    bodyDef.type = b2Body.b2_dynamicBody;
+    fixDef.shape.SetAsBox(0.2, 0.2);
+    fixDef.isSensor = false;
+    bodyDef.position = new b2Vec2(start.x,start.y);
+    
+    var ship = buildEntity();
+    ship.style.fill = '#fff';
+    ship.style.stroke = false;
+    voidjs.player = ship;
+    entities[ship.id] = ship;
+    active_entities.player = ship;
+    ship.checkpoint = false;
+    ship.isPlayer = true;
+    ship.kill = function(){
+      ship.SetActive(false);
+      ship.scripts.register(voidjs.scripts.spawner());
+    };
+
+    // Make walls
+    bodyDef.type = b2Body.b2_staticBody;
+    for (i in level.walls) {
+      var wall = level.walls[i];
+      // Implement a swtich here for type?
+      fixDef.shape.SetAsBox(wall.w, wall.h);
+      bodyDef.position.Set(wall.x, wall.y);//);
+      bodyDef.angle = wall.a || 0;
+      entity = buildEntity();
+      entity.style.fill = '#222';
+      entity.style.stroke = '#444';
       entities[entity.id] = entity;
     }
 
@@ -211,7 +259,7 @@ var voidjs = {
         ));
       }
       entity.draw = voidjs.stencil.drawBox;
-      entity.style = 'rgb('+rCol(200)+','+(0)+','+rCol(0)+')';
+      entity.style = {stroke:'rgb('+rCol(200)+','+(0)+','+rCol(0)+')'};
       entity.scripts = function() {
         // This is a nifty way of letting entities carry their own scripts
         // instead of defining a new script for every event

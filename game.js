@@ -64,7 +64,7 @@ voidjs.scripts.spawner = function () {
   // If player dies:
     // Wait x seconds
     // Respawn player at last checkpoint
-  var ship = voidjs.entities.player;
+  var ship = voidjs.player;
   var tick = 0;
   // Find this script in the que in order to self-destruct
   var i = ship.scripts.getLength();
