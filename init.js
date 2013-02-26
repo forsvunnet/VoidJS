@@ -7,6 +7,7 @@ function lerp(s,e,t) {
 var millis = function () {
   return new Date().getTime();
 };
+
 // @TODO:
 // Try to focus on essential functions.
 // Especially important are features that allow for
@@ -68,6 +69,9 @@ var voidjs = {
   //@TODO : turn entities into an array so we can remove all reference to its object easily
   entities  : {},
   scripts   : {},
+  // Prefabs are open by design. they are meant to be edited and modified by users
+  // Want to make walls bouncy and deadly? Do it in prefabs..
+  prefabs   : {},
   world     : undefined,
   control   : {mouse: {active:false}},
   init:function() {
@@ -141,7 +145,7 @@ var voidjs = {
     bodyDef.angularDamping = 2;
 
     // Build level
-    console.log(chapter);
+    //console.log(chapter);
     var level = voidjs.levels[chapter];
     var entity, i;
 
