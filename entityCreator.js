@@ -28,7 +28,7 @@ voidjs.entityCreator.init = function () {
   ////////////////////////////////
   voidjs.entityCreator.body = new b2BodyDef();
 
-}
+};
 voidjs.entityCreator.buildLevel = function (level) {
   for (var type in level) {
     var struct = level[type];
@@ -53,9 +53,11 @@ voidjs.entityCreator.build = function (type, args, specs) {
     // Hello there <TYPE>, what is your description?
     var description = voidjs.prefabs[type];
 
-    // Body
-    //if (description.defaults) {
+    // Reset defaults
     voidjs.entityCreator.reset(description.defaults);
+    // Apply mappings:
+    var testmap = ['x', 'y', 'width', 'height', 'rotation'];
+
     //  var entity = world.CreateBody(bodyDef);
     //}
 
@@ -63,7 +65,7 @@ voidjs.entityCreator.build = function (type, args, specs) {
 
     // Scripts
 
-    // 
+    //
   }
 };
 voidjs.entityCreator.reset = function (definition){
@@ -94,4 +96,4 @@ voidjs.entityCreator.reset = function (definition){
     fixDef.shape = voidjs.entityCreator.shapes.polygon;
   }
 
-}
+};
