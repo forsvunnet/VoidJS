@@ -7,6 +7,7 @@ function lerp(s,e,t) {
 var millis = function () {
   return new Date().getTime();
 };
+
 vcore = {};
 vcore.scripts = function() {
   // This is a nifty way of letting entities carry their own scripts
@@ -103,6 +104,9 @@ var voidjs = {
   //@TODO : turn entities into an array so we can remove all reference to its object easily
   entities  : {},
   scripts   : {},
+  // Prefabs are open by design. they are meant to be edited and modified by users
+  // Want to make walls bouncy and deadly? Do it in prefabs..
+  prefabs   : {},
   world     : undefined,
   control   : {mouse: {active:false}},
   init:function() {
@@ -174,7 +178,7 @@ var voidjs = {
     bodyDef.angularDamping = 2;
 
     // Build level
-    console.log(chapter);
+    //console.log(chapter);
     var level = voidjs.levels[chapter];
     var entity, i;
 
