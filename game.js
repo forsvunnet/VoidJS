@@ -6,9 +6,10 @@ voidjs.update = function () {
       key = voidjs.key,
       ship = voidjs.player,
       destroy_entities = voidjs.destroy_entities,
-      active_entities = voidjs.active_entities;
+      entities = voidjs.entities;
   var b2Vec2 = Box2D.Common.Math.b2Vec2;
   var shipAt = ship.GetPosition();
+  //console.log(ship.m_linearVelocity.x + ', ' + ship.m_linearVelocity.y);
   /* Mouse experiment:
   if (mouse.active) {
     var mR = new b2Vec2(mouse.x, mouse.y);
@@ -20,13 +21,9 @@ voidjs.update = function () {
     ship.kill();
   }
   var i, j;
-  for (i in active_entities) {
-    if (is_array(active_entities[i])) {
-      for (j in entities[i]) {
-        active_entities[i][j].scripts.call();
-      }
-    } else {
-      active_entities[i].scripts.call();
+  for (i in entities) {
+    if (entities[i].active_scripts !== undefined) {
+      entities[i].active_scripts.call();
     }
   }
   for (i in destroy_entities) {
@@ -76,7 +73,7 @@ voidjs.scripts.spawner = function () {
         );
       ship.SetActive(true);
       // Self-destruct
-      ship.scripts.remove(i);
+      ship.active_scripts.remove(i);
     }
     tick++;
   };
@@ -110,14 +107,21 @@ voidjs.scripts.finish = function(args){
 /**
  * Collectible self-destruct
  */
-
-
 voidjs.scripts.collectible = function(args){
   var body = args[0];
   var sensor = args[1];
   if (body.isPlayer) {
-    //console.log('dunnit');
+    var vel = body.GetLinearVelocity().Normalize();
+    vcore.v2a(vel);
+    voidjs.particles.base({pos:body.GetPosition(), vel:vel});
     voidjs.world.RemoveBody(sensor);
     delete voidjs.entities[sensor.id];
   }
+};
+
+vcore.v2a = function(vector) {
+  return Math.atan2(vector.y, vector.x);
+};
+vcore.a2v = function(angle) {
+  return {x:Math.sin(angle), y:Math.cos(angle)};
 };

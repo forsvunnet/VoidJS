@@ -7,6 +7,42 @@ function lerp(s,e,t) {
 var millis = function () {
   return new Date().getTime();
 };
+vcore = {};
+vcore.scripts = function() {
+  // This is a nifty way of letting entities carry their own scripts
+  // instead of defining a new script for every event
+  // (I'll probably do that anyway, but this is a clean way of doing things)
+  var data = [];
+  return {
+    // Call everything and pass along arguments
+    call: function () {
+      for (var i = 0; i < data.length; i++) {
+        data[i](arguments);
+      }
+    },
+    // Register a new script
+    register: function (func) {
+      data.push(func);
+      return data.length;
+    },
+    // Same as get las registered script
+    // (Useful for self-destructing scripts)
+    getLength: function () {
+      return data.length;
+    },
+    // Clear all scripts
+    clear: function () {
+      data = [];
+    },
+    run: function (i) {
+      return data[i]();
+    },
+    remove: function(i) {
+      console.log(i);
+      data.splice(i,1);
+    }
+  };
+};
 // @TODO:
 // Try to focus on essential functions.
 // Especially important are features that allow for
@@ -63,7 +99,6 @@ var voidjs = {
   }(),
   stencil : {},
   fps: 1000/60,
-  active_entities : {},
   destroy_entities: [],
   //@TODO : turn entities into an array so we can remove all reference to its object easily
   entities  : {},
@@ -125,8 +160,6 @@ var voidjs = {
     };
     var entities = {};
     voidjs.entities = entities;
-    var active_entities = {};
-    voidjs.active_entities = active_entities;
 
     // Fixture
     var fixDef = new b2FixtureDef();
@@ -220,12 +253,12 @@ var voidjs = {
     ship.style.stroke = false;
     voidjs.player = ship;
     entities[ship.id] = ship;
-    active_entities.player = ship;
     ship.checkpoint = false;
     ship.isPlayer = true;
+    ship.active_scripts = vcore.scripts();
     ship.kill = function(){
       ship.SetActive(false);
-      ship.scripts.register(voidjs.scripts.spawner());
+      ship.active_scripts.register(voidjs.scripts.spawner());
     };
 
     // Make walls
@@ -260,41 +293,7 @@ var voidjs = {
       }
       entity.draw = voidjs.stencil.drawBox;
       entity.style = {stroke:'rgb('+rCol(200)+','+(0)+','+rCol(0)+')'};
-      entity.scripts = function() {
-        // This is a nifty way of letting entities carry their own scripts
-        // instead of defining a new script for every event
-        // (I'll probably do that anyway, but this is a clean way of doing things)
-        var data = [];
-        return {
-          // Call everything and pass along arguments
-          call: function () {
-            for (var i = 0; i < data.length; i++) {
-              data[i](arguments);
-            }
-          },
-          // Register a new script
-          register: function (func) {
-            data.push(func);
-            return data.length;
-          },
-          // Same as get las registered script
-          // (Useful for self-destructing scripts)
-          getLength: function () {
-            return data.length;
-          },
-          // Clear all scripts
-          clear: function () {
-            data = [];
-          },
-          run: function (i) {
-            return data[i]();
-          },
-          remove: function(i) {
-            console.log(i);
-            data.splice(i,1);
-          }
-        };
-      }();
+      entity.scripts = vcore.scripts();
       return entity;
     }
     function rCol (off) {

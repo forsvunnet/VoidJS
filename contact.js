@@ -1,5 +1,5 @@
 voidjs.listener = new Box2D.Dynamics.b2ContactListener();
-voidjs.listener.BeginContact = function(contact) {
+voidjs.listener.BeginContact = function(contact, impulse) {
   var fixA = contact.GetFixtureA();
   var fixB = contact.GetFixtureB();
   var sensor = false, body;
@@ -12,14 +12,13 @@ voidjs.listener.BeginContact = function(contact) {
     body = fixA.GetBody();
   }
   if (sensor !== false) {
-    sensor.scripts.call(body, sensor);
+    sensor.scripts.call(body, sensor, contact, impulse);
   }
 
   // If not then maybe play a sound at collision?
   //....
 };
-
-//Pre solve
+// Sensors does not show up here:
 voidjs.listener.PostSolve = function(contact, impulse) {
   var fixA = contact.GetFixtureA();
   var fixB = contact.GetFixtureB();

@@ -5,10 +5,17 @@ var fs = require('fs');
 app.listen(8080);
 
 io.sockets.on('connection', function (socket) {
-  socket.emit('news', { hello: 'world' });
-  socket.on('my other event', function (data) {
-    console.log(data);
+  socket.emit('init');
+  socket.on('setup', function (data) {
+    console.log(data.type);
   });
+  // Server knows position of entities
+  // Server facilitates control input
+
+  // Client 1 Game
+
+  // Client 2 Control
+
 
   // Oh god I hope this can remain simple :(
   // I sincerely hope this socket stuff wont complicate the code
