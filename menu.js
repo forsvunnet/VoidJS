@@ -8,7 +8,7 @@ voidjs.menu.show = function(part){
         title: 'play',
         action: function() {
           chapter = voidjs.chapter;
-          chapter = chapter<2 ? chapter+1 : 0;
+          chapter = chapter+1<voidjs.levels.length ? chapter+1 : 0;
           voidjs.goto('game', chapter);
           clearInterval(update);
         }
