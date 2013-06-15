@@ -3,11 +3,13 @@ function walk_scale() { // 10%
   return rand(0, 100);
 }
 function walk_room($bounds, $start, $end, $scale) { // 50%
+  $args = array(&$bounds, &$start, &$end);
+  foreach ($args as &$coord){ foreach ($coord as &$value) { $value *= $scale; }}
   // * 0 = empty
   // * 1 = wall
   // * 2 = path
   // * 3 = branch
-  $walk = array();
+  $walk = array();//'scale' => $scale);
   $coord = $start;
   //$bounds = bounds();
   for ($x = $bounds[0]; $x <= $bounds[2]; $x++) {
@@ -15,6 +17,8 @@ function walk_room($bounds, $start, $end, $scale) { // 50%
       $walk[$x][$y] = 0;
     }
   }
+  var_dump($walk);
+  dbm($walk); die();
   
   // Punch start into the walk
   list($x, $y) = $start;
@@ -27,7 +31,7 @@ function walk_room($bounds, $start, $end, $scale) { // 50%
     $sketch = walk_punch($x, $y, $walk);
     // Sketch is now the new theoretical $walk
     // before we can approve the step we need to check that the exit is still accesible
-    astar(
+    $astar = astar(
       // .....#x#.
       // .#####x#.
       // .#xxxxx#.
@@ -44,7 +48,9 @@ function walk_room($bounds, $start, $end, $scale) { // 50%
       $next_step,
       $end
     );
-
+    if ($astar) {
+      $walk = $sketch;
+    }
   }
 }
 // Clear a hole in the wall so that astar can walk through

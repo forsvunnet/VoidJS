@@ -1,9 +1,6 @@
 <?php
 
-function make_level () {
-  $seed = mt_rand(1,100);
-  mt_srand($seed);
-  echo "<h1>$seed</h1>";
+function generate_blueprint () {
   $blocks = mt_rand(10, 20);
   $boxes = generate_blocks($blocks);
   $boxes['length'] = count($boxes);
@@ -42,7 +39,7 @@ $dir = array();
 $dir['x'] = array(1,0,-1,0);
 $dir['y'] = array(0,-1,0,1);
 
-function generate_blueprint($blocks) {
+function generate_blocks($blocks) {
   // The creation snake
   // Middgarsormen!
   global $dir;

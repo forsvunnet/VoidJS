@@ -117,7 +117,7 @@ var voidjs = {
     document.addEventListener("mouseup", voidjs.control.mouseup);
     document.addEventListener("mousedown", voidjs.control.mousedown);
     document.addEventListener("mousemove", voidjs.control.mousemove);
-    
+
     var scenes = {
       game: this.game,
       menu: this.menu.show
@@ -251,7 +251,7 @@ var voidjs = {
     fixDef.shape.SetAsBox(0.2, 0.2);
     fixDef.isSensor = false;
     bodyDef.position = new b2Vec2(start.x,start.y);
-    
+
     var ship = buildEntity();
     ship.style.fill = '#fff';
     ship.style.stroke = false;
@@ -269,6 +269,11 @@ var voidjs = {
     bodyDef.type = b2Body.b2_staticBody;
     for (i in level.walls) {
       var wall = level.walls[i];
+      if (wall.length == 2) {
+        wall.x = wall[0];
+        wall.y = wall[1];
+        wall.h = 1; wall.w = 1;
+      }
       // Implement a swtich here for type?
       fixDef.shape.SetAsBox(wall.w, wall.h);
       bodyDef.position.Set(wall.x, wall.y);//);
@@ -280,7 +285,7 @@ var voidjs = {
     }
 
     world.SetContactListener(voidjs.listener);
-    
+
     voidjs.ticker = window.setInterval(voidjs.update, voidjs.fps);
 
     // Helpers

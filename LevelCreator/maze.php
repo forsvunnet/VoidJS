@@ -68,6 +68,9 @@ foreach ($path as $i) {
     $map[$y][$x] = 'P';
 }
 //echo "<pre>";var_dump($map);die();
+require_once "core_debug.php";
+dbm($map);
+die();
 
 ?>
 <html>

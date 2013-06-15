@@ -4,6 +4,7 @@ require_once "core_blueprint.php";
 require_once "core_walk.php";
 require_once "core_carve.php";
 require_once "core_stamps.php";
+require_once "core_debug.php";
 
 
 // Set the seed:
@@ -41,7 +42,7 @@ foreach ($blueprints as $depth => $room) {
   // * 1 = wall
   // * 2 = path
   // * 3 = branch
-  carve($map, $walk); // 0%
+  $map = carve($map, $walk); // 0%
 
   // One special finishing touch is to "join" the rooms
   // This is done using stamps
