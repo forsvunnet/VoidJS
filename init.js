@@ -252,7 +252,9 @@ var voidjs = {
     fixDef.isSensor = false;
     bodyDef.position = new b2Vec2(start.x,start.y);
 
+    bodyDef.linearDamping = 10;
     var ship = buildEntity();
+    bodyDef.linearDamping = 2;
     ship.style.fill = '#fff';
     ship.style.stroke = false;
     voidjs.player = ship;
@@ -272,7 +274,7 @@ var voidjs = {
       if (wall.length == 2) {
         wall.x = wall[0];
         wall.y = wall[1];
-        wall.h = 1; wall.w = 1;
+        wall.h = 0.5; wall.w = 0.5;
       }
       // Implement a swtich here for type?
       fixDef.shape.SetAsBox(wall.w, wall.h);

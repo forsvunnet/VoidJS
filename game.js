@@ -43,7 +43,7 @@ voidjs.update = function () {
     key.down  ?  1:
     0;
   direction.Normalize();
-  direction.Multiply(5);
+  direction.Multiply(25);
   if (direction.x !== 0 || direction.y !== 0) {
     ship.ApplyForce(direction, shipAt);
   }
