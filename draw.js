@@ -8,8 +8,22 @@ voidjs.draw = function(){
   var canvas = voidjs.canvas;
   var entities = voidjs.entities;
   var ctx = canvas.getContext('2d');
+  var b2AABB = Box2D.Collision.b2AABB;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   voidjs.ctx = ctx;
+
+
+  var ship_pos = voidjs.player.GetPosition();
+  var plate = new b2AABB();
+  plate.lowerBound = {x: ship_pos.x - 5, y: ship_pos.y - 5};
+  plate.upperBound = {x: ship_pos.x + 5, y: ship_pos.y + 5};
+  voidjs.world.QueryAABB(function (fixture){
+    if (fixture.m_body.IsActive()) {
+      fixture.m_body.draw();
+    }
+    return true;
+  }, plate);
+  /*
   for (var i in entities) {
     // Retrieve and draw entity/entities
     if (is_array(entities[i])) {
@@ -24,6 +38,7 @@ voidjs.draw = function(){
       }
     }
   }
+  */
 };
 voidjs.stencil.drawBox = function () {
   // this = entity from which the draw is called
@@ -33,7 +48,7 @@ voidjs.stencil.drawBox = function () {
   var vertices = this.vertices;
   var rotation = this.GetAngle();
   var boxV2 = this.GetPosition();
-  ship_pos = voidjs.player.GetPosition();
+  var ship_pos = voidjs.player.GetPosition();
   // Make new object so we dont change the position of an entity
   var position = {
     x : boxV2.x - ship_pos.x + 10,
