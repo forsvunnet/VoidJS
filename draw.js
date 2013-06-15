@@ -23,22 +23,6 @@ voidjs.draw = function(){
     }
     return true;
   }, plate);
-  /*
-  for (var i in entities) {
-    // Retrieve and draw entity/entities
-    if (is_array(entities[i])) {
-      for (var j in entities[i]) {
-        if (entities[i][j].IsActive()) {
-          entities[i][j].draw();
-        }
-      }
-    } else {
-      if (entities[i].IsActive()) {
-        entities[i].draw();
-      }
-    }
-  }
-  */
 };
 voidjs.stencil.drawBox = function () {
   // this = entity from which the draw is called

@@ -335,3 +335,10 @@ var voidjs = {
     }
   }
 };
+
+voidjs.fullscreen = function() {
+  voidjs.canvas.width = window.innerWidth;
+  voidjs.canvas.height = window.innerHeight;
+};
+window.addEventListener('resize', voidjs.fullscreen, false);
+voidjs.fullscreen();

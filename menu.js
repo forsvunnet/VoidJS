@@ -51,7 +51,7 @@ voidjs.menu.show = function(part){
   // #2 : Sound options
   // #3 : Control options
   // #4 : Progression status
-  // #5 : Game settings
+  // #5 : Game settings??
   //voidjs.goto('game');
   // host the function inside to get access to elements
   var ctx = voidjs.canvas.getContext('2d');
