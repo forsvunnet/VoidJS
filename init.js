@@ -190,7 +190,7 @@ var voidjs = {
     // Loop through zones from the level description
     for (i in level.zones) {
       var zone = level.zones[i];
-      // Implement a swtich here for type?
+      // Implement a switch here for type?
       fixDef.shape.SetAsBox(zone.w || 1, zone.h || 1);
       bodyDef.position.Set(zone.x, zone.y);//);
       bodyDef.angle = zone.a || 0;
