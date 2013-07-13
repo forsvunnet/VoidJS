@@ -44,6 +44,26 @@ vcore.scripts = function() {
     }
   };
 };
+
+// Calculate normals from an array of vectors [{x, y}]
+vcore.normals = function(vertices) {
+  var normals = [];
+  for (var i = 0; i < vertices.length; i++) {
+    var c = vertices[i];
+    var next = i + 1 < vertices.length ? i + 1 : 0;
+    var n = vertices[next];
+    // Previos or length-1
+    var prev = i - 1 < 0 ? vertices.length - 1 : i - 1;
+    var p = vertices[prev];
+
+    var a1 = Math.atan2(c.y - p.y, c.x - p.x);
+    var a2 = Math.atan2(c.y - n.y, c.x - n.x);
+    var a = a2 - a1;
+    if (a < 0) { a += 2 * Math.PI; }
+    normals.push(a1 + a);
+  }
+  return normals;
+};
 // @TODO:
 // Try to focus on essential functions.
 // Especially important are features that allow for
@@ -103,6 +123,7 @@ var voidjs = {
   destroy_entities: [],
   //@TODO : turn entities into an array so we can remove all reference to its object easily
   entities  : {},
+  descriptions : {},
   scripts   : {},
   // Prefabs are open by design. they are meant to be edited and modified by users
   // Want to make walls bouncy and deadly? Do it in prefabs..

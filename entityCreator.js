@@ -35,12 +35,27 @@ voidjs.entityCreator.init = function () {
   voidjs.entityCreator.scripts = 0;
 
 };
-voidjs.entityCreator.buildLevel = function (level) {
+voidjs.entityCreator.example = function() {
+  voidjs.entityCreator.init();
+  var level = {
+    wall: [
+      [[{x:0, y:-2}, {x: 2, y: 2}, {x: -2, y: 2}]],
+      [[{x:0, y:-4}, {x: -2, y: -2}, {x: -2, y: -2}]]
+    ]
+  };
+  voidjs.entityCreator.buildLevel(level);
+};
+// Debugging shortcut
+vec = voidjs.entityCreator.example;
+
+voidjs.entityCreator.buildLevel = function(level) {
   // Make new entities
   var entities = {};
   voidjs.entities = entities;
   for (var type in level) {
+    //eg type = wall
     var struct = level[type];
+    // struct = array of walls
     for (var j in struct) {
       var entity_pair = struct[j];
       var args = entity_pair[0], specs = false;
@@ -59,13 +74,14 @@ voidjs.entityCreator.build = function() {
   var entity = world.CreateBody(voidjs.entityCreator.body);
   entity.id = millis() + '_' + voidjs.entity_index();
   entity.CreateFixture(voidjs.entityCreator.fixture);
-  entity.vertices = [];
-  for (var i in voidjs.entityCreator.fixture.shape.m_vertices) {
-    entity.vertices.push( new b2Vec2(
-      voidjs.entityCreator.fixture.shape.m_vertices[i].x,
-      voidjs.entityCreator.fixture.shape.m_vertices[i].y
-    ));
-  }
+  // Short-link vertices
+  entity.vertices = voidjs.entityCreator.fixture.shape.m_vertices;
+  //for (var i in voidjs.entityCreator.fixture.shape.m_vertices) {
+  //  entity.vertices.push( new b2Vec2(
+  //    voidjs.entityCreator.fixture.shape.m_vertices[i].x,
+  //    voidjs.entityCreator.fixture.shape.m_vertices[i].y
+  //  ));
+  //}
   entity.draw = voidjs.stencil.drawBox;
   entity.style = voidjs.entityCreator.style;
 
@@ -78,6 +94,16 @@ voidjs.entityCreator.build = function() {
     }
   }
   return entity;
+};
+voidjs.descriptions.wall = {
+  map: [['vertices', 'fixture']],
+  required : 1,
+  special: {
+    'vertices': function(definition, data) {
+      var shape = definition.GetShape();
+      shape.SetAsVector(data['vertices']);
+    }
+  }
 };
 voidjs.entityCreator.prepare = function (type, args, specs) {
   var def = {
@@ -187,7 +213,7 @@ voidjs.entityCreator.reset = function (definition){
   def['body'].angularDamping = 2;
 
   // Style defaults
-  def['style'].stroke = 'rgb('+rCol(200)+','+(0)+','+rCol(0)+')';
+  def['style'].stroke = 'rgb('+200+','+(0)+','+(0)+')';
   def['style'].fill = '#444';
 
   var property, i;
