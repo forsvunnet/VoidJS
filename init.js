@@ -1,3 +1,5 @@
+// Void JavaScript engine
+
 function lerp(s,e,t) {
   if (t === undefined) {
     t = 0.2;
