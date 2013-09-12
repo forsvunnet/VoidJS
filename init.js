@@ -114,6 +114,8 @@ vcore.aTob2Vec2 = function(definition, data) {
   }
   definition.shape.SetAsVector(vertices);
 };
+
+// Predicts the target player position based on player movement in correlation with projectile speed
 vcore.predict = function(pos, speed, target) {
   var p1 = target.GetPosition();
   var vel = target.GetLinearVelocity();
