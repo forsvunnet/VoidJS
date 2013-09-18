@@ -71,6 +71,10 @@ voidjs.descriptions.player = {
     voidjs.player = entity;
     //console.log('Player:');
     //console.log(entity);
+    entity.inventory = {
+      weapon: voidjs.items.player_sword(),
+      shield: voidjs.items.player_shield()
+    };
   }
 };
 
@@ -92,6 +96,19 @@ voidjs.descriptions.sentry = {
   body: {type: Box2D.Dynamics.b2Body.b2_staticBody},
   after: function(entity, args) {
     entity.active_scripts = vcore.scripts();
+    entity.life = 10;
+    entity.max_life = entity.life;
+    entity.active_scripts.register(voidjs.scripts.life(entity));
+    entity.kill = function() {
+      entity.SetActive(false);
+      var amount = 10;
+      var r = Math.PI *2; // 30 degrees freedom
+      for (var i = 0; i < amount; i++) {
+        var vel = vcore.a2v(Math.random() * r, Math.random() * 7 + 3);
+        var pos = entity.GetPosition();
+        voidjs.entityCreator.create('particle', [pos, vel, c[3], 2, [1000, 2000], 0.1]);
+      }
+    };
     entity.isAI = 1;
     entity.team = 2;
     entity.target_range = 7;
@@ -131,25 +148,139 @@ voidjs.items.gun = function(smart, damage, speed, cooldown) {
   var acd = 0; // active cooldowns
 
   return function(self) {
+    var target = voidjs.entities[self.target];
+    console.log(target);
+    if (self.IsActive()) {
+      if (acd > 0) {
+        acd-= voidjs.fps;
+      } else {
+        // No cooldown active
+        // Activate the cooldown
+        acd = cooldown;
+        // Shoot at target
+        var p1 = self.GetPosition();
+        var p2;
+        if (smart) {
+          p2 = vcore.predict(p1, speed, target);
+        }
+        else {
+          p2 = target.GetPosition();
+        }
+        voidjs.entityCreator.create('bullet', [p1, p2, speed, damage]);
+      }
+    }
+};
+};
+voidjs.items.player_shield = function(damage, cooldown) {
+  return function (self) {
+
+  };
+};
+voidjs.items.player_sword = function(damage, cooldown) {
+  // Storing entities in closures is bad.
+  // The id is fine because it is not an object
+  if (damage === undefined) {
+    damage = 100;
+  }
+  if (!cooldown) {
+    cooldown = 500; // milliseconds
+  }
+  var sword_id = voidjs.entityCreator.create('player_sword', [cooldown]);
+  var acd = 0; // active cooldowns
+
+  return function(self) {
+    var sword = voidjs.entities[sword_id];
+    if (self.life > 0 && sword.cd <= 0) {
+      sword.life = sword.max_life;
+      sword.SetActive(true);
+      sword.cd = cooldown;
+    }
+
     if (acd > 0) {
       acd-= voidjs.fps;
     } else {
       // No cooldown active
       // Activate the cooldown
       acd = cooldown;
-      // Shoot at target
-      var target = voidjs.entities[self.target];
-      var p1 = self.GetPosition();
-      var p2;
-      if (smart) {
-        p2 = vcore.predict(p1, speed, target);
-      }
-      else {
-        p2 = target.GetPosition();
-      }
-      voidjs.entityCreator.create('bullet', [p1, p2, speed, damage]);
     }
   };
+};
+// This is a phantom entity
+// I'm not even sure this should be an entity?
+// Maybe we can do crazy stuff with this as an entity later?
+voidjs.descriptions.player_sword = {
+    map : [
+    ['cd', 'after', 500],
+    ['fill', 'style', c[4]],
+    ['decay', 'after', [50,100]],
+    ['size', 'after', 0.5]
+  ],
+  style: {
+    stroke: false,
+    fill: c[3],
+    layer: 3
+  },
+  body: {
+    bullet: true,
+    angularDamping: 0
+  },
+  scripts: [
+    function (args) {
+      var bullet = args[1];
+      var body = args[0];
+      if (body.team !== bullet.team){
+        console.log(body.team);
+        console.log(bullet.team);
+        if (bullet.damage && body.life) {
+          body.life -= bullet.damage;
+        }
+        // Particles in the reverse direction of the hit:
+        var amount = Math.random() * 2 + 1;
+        var angle = vcore.v2a(bullet.m_linearVelocity);
+        var r = Math.PI / 6; // 30 degrees freedom
+        for (var i = 0; i < amount; i++) {
+          var vel = vcore.a2v(Math.PI + angle + (Math.random() * 2 * r) -r, Math.random() * 5 + 1);
+          var pos = bullet.GetPosition();
+          voidjs.entityCreator.create('particle', [pos, vel]);
+        }
+        if (body.isPlayer && body.hasCamera) {
+          var camera = body.playerNumber || 0;
+          voidjs.camera.shake(camera, 0.2, 250);
+          voidjs.audio.play('hurt', 1);
+        }
+        // Goodbye bullet:
+        //voidjs.world.RemoveBody(bullet);
+      }
+    }
+  ],
+  fixture: { isSensor: true },
+  after: function(entity, args) {
+    entity.m_fixtureList.m_shape.SetAsBox(args[3], args[3]);
+    entity.angularVelocity = (Math.random() * 15 + 5) * (Math.random() > 0.5 ? -1 : 1);
+    entity.life = 0;
+    entity.damage = 500;
+    entity.team = 1;
+    entity.max_life = 250;//entity.life;
+    entity.active_scripts = vcore.scripts();
+    entity.active_scripts.register(voidjs.scripts.decay(entity, voidjs.fps));
+    entity.active_scripts.register(voidjs.scripts.life(entity));
+    entity.cd = args[0];
+    console.log(args);
+    entity.active_scripts.register(function() {
+      entity.SetPosition(voidjs.player.GetPosition());
+      if (entity.cd > 0) {
+        entity.cd -= voidjs.fps;
+      }
+    });
+    entity.active_scripts.register(voidjs.scripts.fade(entity));
+    entity.kill = function() {
+      //console.log('sword died');
+      if (entity.IsActive()) {
+        entity.SetActive(false);
+      }
+      //voidjs.world.RemoveBody(entity);
+    };
+  }
 };
 
 voidjs.descriptions.bullet = {

@@ -241,6 +241,7 @@ var voidjs = {
   destroy_entities: [],
   //@TODO : turn entities into an array so we can remove all reference to its object easily
   entities  : {},
+  active_entities  : {},
   descriptions : {},
   scripts   : {},
   // Prefabs are open by design. they are meant to be edited and modified by users
@@ -296,6 +297,7 @@ var voidjs = {
       // bodies to be destroyed.
       if (body.id) {
         delete voidjs.entities[body.id];
+        delete voidjs.active_entities[body.id];
       }
       if (!world.IsLocked()) {
         // Destroy the body
@@ -306,6 +308,8 @@ var voidjs = {
     };
     var entities = {};
     voidjs.entities = entities;
+    var active_entities = {};
+    voidjs.active_entities = active_entities;
 
     world.SetContactListener(voidjs.listener);
 

@@ -60,6 +60,7 @@ voidjs.entityCreator.create = function(type, args) {
     voidjs.entityCreator.prepare(type, args);
     var entity = voidjs.entityCreator.build(args);
     voidjs.entities[entity.id] = entity;
+    return entity.id;
   } else {
     voidjs.entityCreator.late.push([type, args]);
   }
@@ -108,6 +109,7 @@ p.vertices = f.m_shape.m_vertices;
 f.m_shape.SetAsVector([{x:0, y:-.2}, {x: .2, y: .2}, {x: -.2, y: .2}]);
 //*/
 voidjs.entityCreator.prepare = function (type, args) {
+  var i;
   var def = {
     'body': voidjs.entityCreator.body,
     'fixture': voidjs.entityCreator.fixture,
@@ -132,7 +134,6 @@ voidjs.entityCreator.prepare = function (type, args) {
       ['height', 'fixture', 1],
       ['rotation', 'body', 0]
     ];
-    var required = 2;
 
     var data = {}; // A temporary data obj used by the specials
     var special = {
@@ -149,7 +150,14 @@ voidjs.entityCreator.prepare = function (type, args) {
 
     // Override defaults with description definitions
     if (description.map !== undefined) { map = description.map; }
-    if (description.required !== undefined) { required = description.required; }
+    var required = 0;
+    for (i = 0; i < map.length; i++) {
+      required = i;
+      if (map.length > 2) {
+        break;
+      }
+    }
+    //if (description.required !== undefined) { required = description.required; }
     // @TODO: Count required instead
     if (description.special !== undefined) { special = description.special; }
     if (description.scripts !== undefined) { voidjs.entityCreator.scripts = description.scripts; }
@@ -162,7 +170,7 @@ voidjs.entityCreator.prepare = function (type, args) {
     }
 
     // Loop through attributes and set them one by one
-    for (var i = 0; i < map.length; i++) {
+    for (i = 0; i < map.length; i++) {
       // The map is grouped by what type
       var attribute = map[i];
       var key = attribute[0];
@@ -192,6 +200,7 @@ voidjs.entityCreator.prepare = function (type, args) {
       else if (attribute[1] != 'after') { // After is not a valid def
         // No special treatment for the key, let it pass
         // Apply the value to the definition
+
         def[attribute[1]][key] = value;
         //console.log('def[' + attribute[1] + '][' + key + '] = ' + value);
       }

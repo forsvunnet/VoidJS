@@ -7,6 +7,7 @@ voidjs.update = function () {
       key = voidjs.key,
       ship = voidjs.player,
       destroy_entities = voidjs.destroy_entities,
+      active_entities = voidjs.active_entities,
       entities = voidjs.entities;
   var b2Vec2 = Box2D.Common.Math.b2Vec2;
   var b2AABB = Box2D.Collision.b2AABB;
@@ -40,6 +41,11 @@ voidjs.update = function () {
   for (i in entities) {
     if (entities[i].active_scripts !== undefined) {
       entities[i].active_scripts.call();
+    }
+  }
+  for (i in active_entities) {
+    if (entities[i].active_scripts !== undefined) {
+      //entities[i].active_scripts.call();
     }
   }
   for (i in destroy_entities) {
