@@ -75,6 +75,11 @@ voidjs.descriptions.player = {
       weapon: voidjs.items.player_sword(),
       shield: voidjs.items.player_shield()
     };
+    entity.Inflict = function(bullet) {
+      if (bullet.damage && entity.life) {
+        entity.life -= bullet.damage;
+      }
+    };
   }
 };
 
@@ -149,7 +154,7 @@ voidjs.items.gun = function(smart, damage, speed, cooldown) {
 
   return function(self) {
     var target = voidjs.entities[self.target];
-    console.log(target);
+    //console.log(target);
     if (self.IsActive()) {
       if (acd > 0) {
         acd-= voidjs.fps;
@@ -169,16 +174,34 @@ voidjs.items.gun = function(smart, damage, speed, cooldown) {
         voidjs.entityCreator.create('bullet', [p1, p2, speed, damage]);
       }
     }
-};
+  };
 };
 voidjs.items.player_shield = function(damage, cooldown) {
+  if (damage === undefined) {
+    damage = 100;
+  }
+  if (!cooldown) {
+    cooldown = 500; // milliseconds
+  }
+  // Items are not entities, but they can easily create entities
+  // Storing entities in closures is bad.
+  // The id is fine because it is not an object
+  var shield_id = voidjs.entityCreator.create('player_shield', [cooldown]);
+  // Entities are useful for scrips that need to run every frame,
+  // but i concede that I need to make an array for non entity scripts
+  // to run every frame too.
   return function (self) {
-
+    // Sword and shield are basically the same. Simplify?
+    // @TODO: Make this smarter
+    var shield = voidjs.entities[shield_id];
+    if (self.life > 0 && shield.cd <= 0) {
+      shield.life = shield.max_life;
+      shield.SetActive(true);
+      shield.cd = cooldown;
+    }
   };
 };
 voidjs.items.player_sword = function(damage, cooldown) {
-  // Storing entities in closures is bad.
-  // The id is fine because it is not an object
   if (damage === undefined) {
     damage = 100;
   }
@@ -186,7 +209,6 @@ voidjs.items.player_sword = function(damage, cooldown) {
     cooldown = 500; // milliseconds
   }
   var sword_id = voidjs.entityCreator.create('player_sword', [cooldown]);
-  var acd = 0; // active cooldowns
 
   return function(self) {
     var sword = voidjs.entities[sword_id];
@@ -195,20 +217,92 @@ voidjs.items.player_sword = function(damage, cooldown) {
       sword.SetActive(true);
       sword.cd = cooldown;
     }
-
-    if (acd > 0) {
-      acd-= voidjs.fps;
-    } else {
-      // No cooldown active
-      // Activate the cooldown
-      acd = cooldown;
-    }
   };
 };
 // This is a phantom entity
 // I'm not even sure this should be an entity?
 // Maybe we can do crazy stuff with this as an entity later?
 voidjs.descriptions.player_sword = {
+    map : [
+    ['cd', 'after', 500],
+    ['fill', 'style', c[4]],
+    ['decay', 'after', [50,100]],
+    ['size', 'after', 0.5]
+  ],
+  style: {
+    stroke: false,
+    fill: c[3],
+    layer: 3
+  },
+  body: {
+    bullet: true,
+    angularDamping: 0,
+    linearDamping: 0
+  },
+  scripts: [
+    function (args) {
+      var bullet = args[1];
+      var body = args[0];
+      if (bullet.life > 0 && body.team !== bullet.team){
+        if (bullet.damage && body.life) {
+          body.life -= bullet.damage;
+        }
+        // Particles in the reverse direction of the hit:
+        var amount = Math.random() * 2 + 1;
+        var angle = vcore.v2a(bullet.m_linearVelocity);
+        var r = Math.PI / 6; // 30 degrees freedom
+        for (var i = 0; i < amount; i++) {
+          var vel = vcore.a2v(Math.PI + angle + (Math.random() * 2 * r) -r, Math.random() * 5 + 1);
+          var pos = bullet.GetPosition();
+          voidjs.entityCreator.create('particle', [pos, vel]);
+        }
+        if (body.isPlayer && body.hasCamera) {
+          var camera = body.playerNumber || 0;
+          voidjs.camera.shake(camera, 0.2, 250);
+          voidjs.audio.play('hurt', 1);
+        }
+        // Goodbye bullet:
+        //voidjs.world.RemoveBody(bullet);
+      }
+    }
+  ],
+  fixture: { isSensor: true },
+  after: function(entity, args) {
+    entity.m_fixtureList.m_shape.SetAsBox(args[3], args[3]);
+    entity.angularVelocity = (Math.random() * 15 + 5) * (Math.random() > 0.5 ? -1 : 1);
+    entity.life = 0;
+    entity.damage = 500;
+    entity.team = 1;
+    entity.max_life = 250;//entity.life;
+    entity.active_scripts = vcore.scripts();
+    entity.active_scripts.register(voidjs.scripts.decay(entity, voidjs.fps));
+    entity.active_scripts.register(voidjs.scripts.life(entity));
+    entity.cd = args[0];
+    entity.m_mass = 0;
+    //console.log(args);
+    entity.active_scripts.register(function() {
+      //entity.SetPosition(voidjs.player.GetPosition());
+      if (entity.cd > 0) {
+        entity.cd -= voidjs.fps;
+      }
+    });
+    //var b2WeldJoint = Box2D.Dynamics.Joints.b2WeldJoint;
+    var b2WeldJointDef = Box2D.Dynamics.Joints.b2WeldJointDef;
+    var joint = new b2WeldJointDef();
+    entity.SetPosition(voidjs.player.GetPosition());
+    joint.Initialize(entity, voidjs.player, {x:0, y:0});
+    voidjs.world.CreateJoint(joint);
+    entity.active_scripts.register(voidjs.scripts.fade(entity));
+    entity.kill = function() {
+      //console.log('sword died');
+      if (entity.IsActive()) {
+        //entity.SetActive(false);
+      }
+      //voidjs.world.RemoveBody(entity);
+    };
+  }
+};
+voidjs.descriptions.player_shield = {
     map : [
     ['cd', 'after', 500],
     ['fill', 'style', c[4]],
@@ -282,7 +376,6 @@ voidjs.descriptions.player_sword = {
     };
   }
 };
-
 voidjs.descriptions.bullet = {
   map : [
     ['p1', 'body'],
@@ -322,8 +415,8 @@ voidjs.descriptions.bullet = {
       var bullet = args[1];
       var body = args[0];
       if (body.team !== bullet.team){
-        if (bullet.damage && body.life) {
-          body.life -= bullet.damage;
+        if (body.Inflict) {
+          body.Inflict(bullet);
         }
         // Particles in the reverse direction of the hit:
         var amount = Math.random() * 2 + 1;
@@ -341,6 +434,7 @@ voidjs.descriptions.bullet = {
         }
         // Goodbye bullet:
         voidjs.world.RemoveBody(bullet);
+        // @TODO: re-use bullets
       }
     }
   ],
