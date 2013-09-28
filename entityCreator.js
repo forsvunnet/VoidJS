@@ -73,6 +73,7 @@ voidjs.entityCreator.lateCreate = function() {
   voidjs.entityCreator.late = [];
 };
 voidjs.entityCreator.build = function(args) {
+  var b2Vec2 = Box2D.Common.Math.b2Vec2;
   var world = voidjs.world;
   //console.log(voidjs.entityCreator.body);
   var entity = world.CreateBody(voidjs.entityCreator.body);
@@ -81,6 +82,7 @@ voidjs.entityCreator.build = function(args) {
   if (voidjs.entityCreator.fixture.shape.m_vertexCount === 0) {
     voidjs.entityCreator.fixture.shape.SetAsBox(0.2, 0.2);
   }
+
   entity.CreateFixture(voidjs.entityCreator.fixture);
   // Short-link vertices
   entity.vertices = entity.m_fixtureList.m_shape.m_vertices;
@@ -90,7 +92,7 @@ voidjs.entityCreator.build = function(args) {
   // Creates a new instance of a script register
   // It's quite complex code so better leave it at that
   entity.scripts = vcore.scripts();
-  var i, script;
+  var script, i;
   if (voidjs.entityCreator.scripts) {
     for (i in voidjs.entityCreator.scripts) {
       script = voidjs.entityCreator.scripts[i];

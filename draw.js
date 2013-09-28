@@ -117,10 +117,17 @@ voidjs.stencil.drawEntity = function (camera) {
   };
   //position.y += voidjs.entities.player.y || 0;
   // All parts in the bag?
-
-  voidjs.stencil.drawVerts(style.fill, style.stroke, vertices, position, rotation);
+  var normals = this.m_fixtureList.m_shape.m_normals;
+  voidjs.stencil.drawVerts(
+    style.fill,
+    style.stroke,
+    vertices,
+    position,
+    rotation,
+    normals
+  );
 };
-voidjs.stencil.drawVerts = function (fill, stroke, vertices, position, rotation) {
+voidjs.stencil.drawVerts = function (fill, stroke, vertices, position, rotation, normals) {
   var ctx = voidjs.ctx;
   var scale = voidjs.scale || 30;
   ctx.save();
@@ -169,6 +176,24 @@ voidjs.stencil.drawVerts = function (fill, stroke, vertices, position, rotation)
     ctx.fillStyle = fill;
     ctx.fill();
   }
+
+  if (normals) {
+    for (i = 0; i < vertices.length; i++) {
+      ctx.beginPath();
+        ctx.moveTo(
+          (vertices[i].x) * scale,
+          (vertices[i].y) * scale
+        );
+        ctx.lineTo(
+          (vertices[i].x - normals[i].x / (5)) * scale,
+          (vertices[i].y - normals[i].y / (5)) * scale
+        );
+      ctx.closePath();
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+    }
+  }
+
   ctx.restore();
 };
 voidjs.stencil.drawString = function (y) {
