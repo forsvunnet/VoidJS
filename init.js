@@ -105,6 +105,7 @@ vcore.normals = function(vertices) {
   }
   return normals;
 };
+// Array to box 2d vector 2
 vcore.aTob2Vec2 = function(definition, data) {
   var b2Vec2 = Box2D.Common.Math.b2Vec2;
   var i, j;
@@ -114,35 +115,18 @@ vcore.aTob2Vec2 = function(definition, data) {
     vertices.push(new b2Vec2(v[0], v[1]));
   }
 
-    var shape = voidjs.entityCreator.fixture.shape;
-  //debugger;
-  // Re-calculate normals because they're not always right:
+  var shape = voidjs.entityCreator.fixture.shape;
   var total = 0;
+  // Ensure clockwise placement of vertices
   for (i = 0; i < vertices.length; i++) {
     // http://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-points-are-in-clockwise-order
     j = (i + 1) % vertices.length;
     total += (vertices[j].x - vertices[i].x) * (vertices[j].y + vertices[i].y);
   }
-  //console.log (total);
   if (total > 0) {
-    //debugger;
+    // In case of counterclockwise vertices
+    // reverse the array to make it clockwise
     vertices.reverse();
-    /*
-    var new_normals = {};
-    shape.m_centroid.x = 0;
-    shape.m_centroid.y = 0;
-    for (i = 0; i < vertices.length; i++) {
-      //http://stackoverflow.com/questions/11548309/guarantee-outward-direction-of-polygon-normals
-      //j = (i - 1); j = j < 0 ? vertices.length - 1 : j;
-      j = (i + 1) % vertices.length;
-      new_normals[j] = new b2Vec2(
-        normals[i].x * -1,
-        normals[i].y * -1
-      );
-    }
-    for (i = 0; i < normals.length; i++) {
-      normals[i] = new_normals[i];
-    }*/
   }
   definition.shape.SetAsVector(vertices);
 };
