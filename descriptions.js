@@ -24,8 +24,8 @@ voidjs.descriptions.shard = {
   map : [
     ['x', 'body'],
     ['y', 'body'],
-    ['width', 'fixture', 0.1],
-    ['height', 'fixture', 0.1]
+    ['width', 'fixture', 0.3],
+    ['height', 'fixture', 0.3]
   ],
   body: {type: Box2D.Dynamics.b2Body.b2_staticBody},
   fixture: {isSensor: true},
@@ -69,8 +69,6 @@ voidjs.descriptions.player = {
       entity.active_scripts.register(voidjs.scripts.spawner());
     };
     voidjs.player = entity;
-    //console.log('Player:');
-    //console.log(entity);
     entity.inventory = {
       weapon: voidjs.items.player_sword(),
       shield: voidjs.items.player_shield()
@@ -190,7 +188,7 @@ voidjs.items.player_shield = function(damage, cooldown) {
   // Entities are useful for scrips that need to run every frame,
   // but i concede that I need to make an array for non entity scripts
   // to run every frame too.
-  return function (self) {
+  return function(self) {
     // Sword and shield are basically the same. Simplify?
     // @TODO: Make this smarter
     var shield = voidjs.entities[shield_id];
@@ -214,6 +212,8 @@ voidjs.items.player_sword = function(damage, cooldown) {
     var sword = voidjs.entities[sword_id];
     if (self.life > 0 && sword.cd <= 0) {
       sword.life = sword.max_life;
+      sword.SetPosition(self.GetPosition());
+      sword.SetLinearVelocity(self.GetLinearVelocity());
       sword.SetActive(true);
       sword.cd = cooldown;
     }
@@ -257,7 +257,7 @@ voidjs.descriptions.player_sword = {
           voidjs.entityCreator.create('particle', [pos, vel]);
         }
         if (body.isPlayer && body.hasCamera) {
-          var camera = body.playerNumber || 0;
+          var camera = body.player_number || 0;
           voidjs.camera.shake(camera, 0.2, 250);
           voidjs.audio.play('hurt', 1);
         }
@@ -296,7 +296,7 @@ voidjs.descriptions.player_sword = {
     entity.kill = function() {
       //console.log('sword died');
       if (entity.IsActive()) {
-        //entity.SetActive(false);
+        entity.SetActive(false);
       }
       //voidjs.world.RemoveBody(entity);
     };

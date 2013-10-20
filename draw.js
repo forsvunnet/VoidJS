@@ -117,14 +117,12 @@ voidjs.stencil.drawEntity = function (camera) {
   };
   //position.y += voidjs.entities.player.y || 0;
   // All parts in the bag?
-  var normals = this.m_fixtureList.m_shape.m_normals;
   voidjs.stencil.drawVerts(
     style.fill,
     style.stroke,
     vertices,
     position,
-    rotation,
-    normals
+    rotation
   );
 };
 voidjs.stencil.drawVerts = function (fill, stroke, vertices, position, rotation, normals) {
