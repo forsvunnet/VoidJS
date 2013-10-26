@@ -248,10 +248,9 @@ voidjs.entityCreator.reset = function (description){
   def['style'].fill = 0;
 
   var i, j, props = ['body', 'fixture', 'style'];
-  //console.log(definition);
+  
   for (i in props){
     var property = props[i];
-    //console.log(property);
     if (description && description[property]) {
       for (j in description[property]) {
         if (description[property].hasOwnProperty(j)){

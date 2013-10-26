@@ -215,9 +215,9 @@ var c = [
   solarized.base03, // BG
   solarized.base01, // Wall line
   solarized.base02, // Level BG
-  solarized.base0,  // Player color
+  solarized.blue,  // Player color
   solarized.magenta, // Enemy color
-  solarized.cyan  // Checkpoint / End
+  solarized.base03  // Checkpoint / End
 ];
 // @TODO:
 // Try to focus on essential functions.

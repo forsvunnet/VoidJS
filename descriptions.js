@@ -71,7 +71,7 @@ voidjs.descriptions.player = {
     voidjs.player = entity;
     entity.inventory = {
       weapon: voidjs.items.player_sword(),
-      shield: voidjs.items.player_shield()
+      //shield: voidjs.items.player_shield()
     };
     entity.Inflict = function(bullet) {
       if (bullet.damage && entity.life) {
@@ -225,7 +225,7 @@ voidjs.items.player_sword = function(damage, cooldown) {
 voidjs.descriptions.player_sword = {
     map : [
     ['cd', 'after', 500],
-    ['fill', 'style', c[4]],
+    //['fill', 'style', c[2]],
     ['decay', 'after', [50,100]],
     ['size', 'after', 0.5]
   ],
@@ -359,7 +359,7 @@ voidjs.descriptions.player_shield = {
     entity.active_scripts.register(voidjs.scripts.decay(entity, voidjs.fps));
     entity.active_scripts.register(voidjs.scripts.life(entity));
     entity.cd = args[0];
-    console.log(args);
+
     entity.active_scripts.register(function() {
       entity.SetPosition(voidjs.player.GetPosition());
       if (entity.cd > 0) {
