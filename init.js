@@ -287,7 +287,7 @@ var voidjs = {
   prefabs   : {},
   world     : undefined,
   control   : {mouse: {active:false}},
-  init:function() {
+  init: function() {
     // Init only happens once, the other functions can happen many times
     // Register all even listeners here
     document.addEventListener("keydown", voidjs.control.keydown);
@@ -308,12 +308,24 @@ var voidjs = {
       scenes[scene](part);
     };
     // Open her up, start at the menu
-    this.goto('menu');
+    $.getJSON('levels/levels.json', function(data) {
+      voidjs.levels = data.levels;
+      voidjs.goto('menu');
+    });
   },
   game:function(chapter) {
     chapter = chapter || 0;
     voidjs.chapter = chapter;
+    // Play loading screen
+    
+    // @TODO: Make loading screen
+
+    // load the level
+    $.getJSON('levels/' + voidjs.levels[chapter].file, voidjs.init_game);
+  },
+  init_game: function(level) {
     // Set up variables
+    chapter = voidjs.chapter || 0;
     var b2Vec2            = Box2D.Common.Math.b2Vec2,
         b2AABB            = Box2D.Collision.b2AABB,
         b2BodyDef         = Box2D.Dynamics.b2BodyDef,
@@ -350,9 +362,8 @@ var voidjs = {
     voidjs.active_entities = active_entities;
 
     world.SetContactListener(voidjs.listener);
-
     voidjs.entityCreator.init();
-    voidjs.entityCreator.buildLevel(voidjs.levels[chapter]);
+    voidjs.entityCreator.buildLevel(level);
     voidjs.ticker = window.setInterval(voidjs.update, voidjs.fps);
 
     // Helpers
