@@ -64,8 +64,29 @@ voidjs.control.mouseup = function (e) {
   mouse.active = false;
   voidjs.control.mousemove(e);
 };
+
+
+        //http://js-tut.aardon.de/js-tut/tutorial/position.html
+var getElementPosition = function (element) {
+  var elem=element, tagname="", x=0, y=0;
+
+  while ((typeof(elem) == "object") && (typeof(elem.tagName) != "undefined")) {
+     y += elem.offsetTop;
+     x += elem.offsetLeft;
+     tagname = elem.tagName.toUpperCase();
+
+     if(tagname == "BODY")
+        elem=0;
+
+     if(typeof(elem) == "object") {
+        if(typeof(elem.offsetParent) == "object")
+           elem = elem.offsetParent;
+     }
+  }
+  return {x: x, y: y};
+};
 voidjs.control.mousemove = function (e) {
-  var canvasPosition = voidjs.helpers.getElementPosition(voidjs.canvas);
+  var canvasPosition = getElementPosition(voidjs.canvas);
   var mouse = voidjs.control.mouse;
   mouse.x = (e.clientX - canvasPosition.x) / 30;
   mouse.y = (e.clientY - canvasPosition.y) / 30;

@@ -313,16 +313,20 @@ var voidjs = {
       voidjs.goto('menu');
     });
   },
-  game:function(chapter) {
+
+  // Start the game at the given chapter (level id)
+  game: function(chapter) {
     chapter = chapter || 0;
     voidjs.chapter = chapter;
     // Play loading screen
     
     // @TODO: Make loading screen
 
-    // load the level
+    // load the level and pass it to the init function
     $.getJSON('levels/' + voidjs.levels[chapter].file, voidjs.init_game);
   },
+
+  // Initsialise the game world
   init_game: function(level) {
     // Set up variables
     chapter = voidjs.chapter || 0;
@@ -338,9 +342,12 @@ var voidjs = {
         b2PolygonShape    = Box2D.Collision.Shapes.b2PolygonShape,
         b2CircleShape     = Box2D.Collision.Shapes.b2CircleShape
       ;
+    // Set the basics of the world
     var gravity = new b2Vec2(0, 0);
     var world = new b2World(gravity, true);
     voidjs.world = world;
+
+    // Add a helper function to remove bodies regardless of the game state
     world.RemoveBody = function (body) {
       // Helper function to Destroy bodies irrelevant to context.
       // If the world is locked then send the body to the que for
@@ -356,56 +363,27 @@ var voidjs = {
         voidjs.destroy_entities.push(body);
       }
     };
+
+    // Clear the entities
     var entities = {};
     voidjs.entities = entities;
+
+    // Clear the active entities
     var active_entities = {};
+    // The active entities are normal entities that run a script every frame
     voidjs.active_entities = active_entities;
 
+    // Setup the contact handler
     world.SetContactListener(voidjs.listener);
+
+    // Fire up the entity creator
     voidjs.entityCreator.init();
+    // Build the level
     voidjs.entityCreator.buildLevel(level);
+
+    // Start the game
     voidjs.ticker = window.setInterval(voidjs.update, voidjs.fps);
-
-    // Helpers
-    function buildEntity () {
-      var entity = world.CreateBody(bodyDef);
-      entity.id = millis() + '_' + voidjs.entity_index();
-      entity.CreateFixture(fixDef);
-      entity.vertices = [];
-      for (var i in fixDef.shape.m_vertices) {
-        entity.vertices.push( new b2Vec2(
-          fixDef.shape.m_vertices[i].x,
-          fixDef.shape.m_vertices[i].y
-        ));
-      }
-      entity.draw = voidjs.stencil.drawBox;
-      entity.style = {stroke:'rgb('+rCol(200)+','+(0)+','+rCol(0)+')'};
-      entity.scripts = vcore.scripts();
-      return entity;
-    }
   },
-  helpers : {
-        //http://js-tut.aardon.de/js-tut/tutorial/position.html
-    getElementPosition: function (element) {
-      var elem=element, tagname="", x=0, y=0;
-
-      while ((typeof(elem) == "object") && (typeof(elem.tagName) != "undefined")) {
-         y += elem.offsetTop;
-         x += elem.offsetLeft;
-         tagname = elem.tagName.toUpperCase();
-
-         if(tagname == "BODY")
-            elem=0;
-
-         if(typeof(elem) == "object") {
-            if(typeof(elem.offsetParent) == "object")
-               elem = elem.offsetParent;
-         }
-      }
-
-      return {x: x, y: y};
-    }
-  }
 };
 
 voidjs.fullscreen = function() {
