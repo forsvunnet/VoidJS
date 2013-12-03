@@ -274,19 +274,20 @@ var voidjs = {
       return index;
     };
   }(),
-  stencil : {},
+  stencil: {},
   fps: 1000/30,
   destroy_entities: [],
-  //@TODO : turn entities into an array so we can remove all reference to its object easily
-  entities  : {},
-  active_entities  : {},
-  descriptions : {},
-  scripts   : {},
+  entities: {},
+  active_entities: {},
+  entity_type_tracker: {},
+  descriptions: {},
+  scripts: {},
   // Prefabs are open by design. they are meant to be edited and modified by users
   // Want to make walls bouncy and deadly? Do it in prefabs..
-  prefabs   : {},
-  world     : undefined,
-  control   : {mouse: {active:false}},
+  prefabs: {},
+  world: undefined,
+  control: { mouse: { active:false } },
+  // Init the interface
   init: function() {
     // Init only happens once, the other functions can happen many times
     // Register all even listeners here
@@ -326,7 +327,7 @@ var voidjs = {
     $.getJSON('levels/' + voidjs.levels[chapter].file, voidjs.init_game);
   },
 
-  // Initsialise the game world
+  // Initialise the game world
   init_game: function(level) {
     // Set up variables
     chapter = voidjs.chapter || 0;
@@ -373,6 +374,9 @@ var voidjs = {
     // The active entities are normal entities that run a script every frame
     voidjs.active_entities = active_entities;
 
+    // Empty the tracker
+    voidjs.entity_type_tracker = {};
+
     // Setup the contact handler
     world.SetContactListener(voidjs.listener);
 
@@ -380,6 +384,8 @@ var voidjs = {
     voidjs.entityCreator.init();
     // Build the level
     voidjs.entityCreator.buildLevel(level);
+    // Add spawners
+    voidjs.entityCreator.create_spawners();
 
     // Start the game
     voidjs.ticker = window.setInterval(voidjs.update, voidjs.fps);

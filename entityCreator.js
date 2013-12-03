@@ -1,5 +1,7 @@
 
 voidjs.entityCreator = {};
+
+// Setup fresh box2d definitions
 voidjs.entityCreator.init = function () {
     var b2Vec2            = Box2D.Common.Math.b2Vec2,
         b2AABB            = Box2D.Collision.b2AABB,
@@ -36,6 +38,7 @@ voidjs.entityCreator.init = function () {
 
 };
 
+// Take a level description and build it
 voidjs.entityCreator.buildLevel = function(level) {
   // Make new entities
   var entities = {};
@@ -46,25 +49,31 @@ voidjs.entityCreator.buildLevel = function(level) {
     // struct = array of walls
     for (var j in struct) {
       var args = struct[j];
-      voidjs.entityCreator.prepare(type, args);
-      var entity = voidjs.entityCreator.build();
-      //console.log(entity);
-      entities[entity.id] = entity;
+      voidjs.entityCreator.create(type, args);
     }
   }
 
 };
+// Storage for entities attempted to be created inside a world step
 voidjs.entityCreator.late = [];
+
+// Create an entity or procastinate it untill the end of the step
 voidjs.entityCreator.create = function(type, args) {
   if (!voidjs.world.IsLocked()) {
     voidjs.entityCreator.prepare(type, args);
     var entity = voidjs.entityCreator.build(args);
     voidjs.entities[entity.id] = entity;
+    if (voidjs.entity_type_tracker[type] === undefined) {
+      voidjs.entity_type_tracker[type] = [];
+    }
+    voidjs.entity_type_tracker[type].push(entity.id);
     return entity.id;
   } else {
     voidjs.entityCreator.late.push([type, args]);
   }
 };
+
+// Loop through the storage and create new entities
 voidjs.entityCreator.lateCreate = function() {
   var late = voidjs.entityCreator.late;
   for (var i = 0; i < late.length; i++) {
@@ -72,6 +81,8 @@ voidjs.entityCreator.lateCreate = function() {
   }
   voidjs.entityCreator.late = [];
 };
+
+// Build an entity
 voidjs.entityCreator.build = function(args) {
   var b2Vec2 = Box2D.Common.Math.b2Vec2;
   var world = voidjs.world;
@@ -110,6 +121,8 @@ var f = p.GetFixtureList();
 p.vertices = f.m_shape.m_vertices;
 f.m_shape.SetAsVector([{x:0, y:-.2}, {x: .2, y: .2}, {x: -.2, y: .2}]);
 //*/
+
+// Prepare an entity
 voidjs.entityCreator.prepare = function (type, args) {
   var i;
   var def = {
@@ -214,6 +227,8 @@ voidjs.entityCreator.prepare = function (type, args) {
     alert('Type: ' + type + ' not found in descriptions');
   }
 };
+
+// Reset an entity
 voidjs.entityCreator.reset = function (description){
   voidjs.entityCreator.style = {};
   var def = {
@@ -257,6 +272,20 @@ voidjs.entityCreator.reset = function (description){
           def[property][j] = description[property][j];
         }
       }
+    }
+  }
+};
+
+voidjs.entityCreator.create_spawners = function(level) {
+  for (var i = 0; i < voidjs.entity_type_tracker.background.length; i++) {
+    var bgi = voidjs.entity_type_tracker.background[i];
+    var background = voidjs.entities[bgi];
+    // @TODO: Allocation  (infi loop untill all allocated slots have been placed (of different types))
+    // Base allocation on a difficulty variable (Amount of players * progression etc..)
+    if (Math.random() *1000 > 960) {
+      // @TODO: Smarter placement (no entity placement near checkpoints)
+      var pos = background.m_fixtureList.m_shape.m_centroid;
+      voidjs.entityCreator.create('sentry', [pos.x, pos.y]);
     }
   }
 };
