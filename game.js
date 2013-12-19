@@ -87,13 +87,21 @@ voidjs.scripts.spawner = function () {
   var tick = 0;
   // Find this script in the que in order to self-destruct
   var i = ship.active_scripts.getLength();
-  console.log("Spawner at: " + i);
+  //console.log("Spawner at: " + i);
   return function(){
-    if(tick > 60) {
-      ship.SetPosition( ship.checkpoint?
-        ship.checkpoint:
-        {x:7, y:7}
-        );
+    if (tick > 60) {
+      var pos = ship.checkpoint || {x:7, y:7};
+      ship.SetPosition( pos );
+
+      for (var i = 0; i < ship.inventory.length; i++) {
+        var item = ship.inventory[i];
+        if (typeof item === 'object') {
+          if (item.entity_id) {
+            voidjs.entities[item.entity_id].SetPosition(pos);
+          }
+        }
+      }
+
       ship.SetActive(true);
       ship.life = ship.max_life || 20;
       // Self-destruct

@@ -125,6 +125,8 @@ voidjs.stencil.drawEntity = function (camera) {
     rotation
   );
 };
+
+var glitches = {};
 voidjs.stencil.drawVerts = function (fill, stroke, vertices, position, rotation, normals) {
   var ctx = voidjs.ctx;
   var scale = voidjs.scale || 30;
@@ -132,38 +134,48 @@ voidjs.stencil.drawVerts = function (fill, stroke, vertices, position, rotation,
   ctx.beginPath();
   var angle = rotation.angle || rotation;
   var localAngle = rotation.localAngle || 0;
+
+  // Scale function
+  var s = function(value) {
+    /*var orig = value;
+    if (glitches[value] !== undefined) {
+      value = glitches[value];
+    }
+    if (Math.random() * 100 > 99.99) {
+      value += 1 * (Math.random() - 0.5);
+      glitches[orig] = value;
+    }*/
+    return scale * value;
+  };
   // Get started on the vertices:
   // To center of entity
   ctx.translate(
-    position.x * scale,
-    position.y * scale
+    s(position.x),
+    s(position.y)
   );
   //Rotate the canvas
   ctx.rotate(angle);
 
   if (position.localX !== undefined && position.localY !== undefined) {
     ctx.translate(
-      position.localX * scale,
-      position.localY * scale
+      s(position.localX),
+      s(position.localY)
     );
   }
   if (localAngle) {
     ctx.rotate(localAngle);
   }
   ctx.moveTo(
-    (vertices[0].x) * scale,
-    (vertices[0].y) * scale
+    s(vertices[0].x),
+    s(vertices[0].y)
   );
   for (var i = 1; i < vertices.length; i++) {
     ctx.lineTo(
-      (vertices[i].x) * scale,
-      (vertices[i].y) * scale
+      s(vertices[i].x),
+      s(vertices[i].y)
     );
   }
-  /*ctx.translate(
-    -position.x * scale,
-    -position.y * scale
-  );*/
+
   // Translation of coordinates:
   ctx.closePath();
   if (stroke) {

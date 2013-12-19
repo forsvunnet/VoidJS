@@ -8,9 +8,7 @@ voidjs.control.keydown = function(e) {
 voidjs.control.keyup = function(e) {
   var key = voidjs.key;
   if(key.fire) {
-    if (typeof voidjs.player.inventory.weapon === 'function') {
-      voidjs.player.inventory.weapon(voidjs.player);
-    }
+    voidjs.activate_item(voidjs.player.inventory.weapon, voidjs.player);
   }
   if(key.select) {
     //var vel = voidjs.player.GetLinearVelocity();

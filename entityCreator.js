@@ -49,7 +49,7 @@ voidjs.entityCreator.buildLevel = function(level) {
     // struct = array of walls
     for (var j in struct) {
       var args = struct[j];
-      voidjs.entityCreator.create(type, args);
+      voidjs.entityCreator.create(type, args, 0, 0);
     }
   }
 
@@ -58,37 +58,54 @@ voidjs.entityCreator.buildLevel = function(level) {
 voidjs.entityCreator.late = [];
 
 // Create an entity or procastinate it untill the end of the step
-voidjs.entityCreator.create = function(type, args) {
-  if (!voidjs.world.IsLocked()) {
-    voidjs.entityCreator.prepare(type, args);
-    var entity = voidjs.entityCreator.build(args);
-    voidjs.entities[entity.id] = entity;
-    if (voidjs.entity_type_tracker[type] === undefined) {
-      voidjs.entity_type_tracker[type] = [];
-    }
-    voidjs.entity_type_tracker[type].push(entity.id);
-    return entity.id;
-  } else {
-    voidjs.entityCreator.late.push([type, args]);
+voidjs.entityCreator.create = function(type, args, id, delay) {
+  if (delay === undefined) {
+    delay = 1;
   }
+  if (!voidjs.world.IsLocked() && !delay) {
+    voidjs.entityCreator.prepare(type, args);
+    var entity = voidjs.entityCreator.build(args, id);
+    id = entity.id;
+    voidjs.entities[id] = entity;
+  } else {
+    id = voidjs.entityCreator.id();
+    voidjs.entityCreator.late.push([type, args, id]);
+  }
+
+  // Keep track of entities
+  if (voidjs.entity_type_tracker[type] === undefined) {
+    voidjs.entity_type_tracker[type] = [];
+  }
+  voidjs.entity_type_tracker[type].push(id);
+  return id;
 };
 
 // Loop through the storage and create new entities
 voidjs.entityCreator.lateCreate = function() {
   var late = voidjs.entityCreator.late;
   for (var i = 0; i < late.length; i++) {
-    voidjs.entityCreator.create(late[i][0], late[i][1]);
+    voidjs.entityCreator.create(late[i][0], late[i][1], late[i][2], 0);
   }
   voidjs.entityCreator.late = [];
 };
 
+// Create a new id
+voidjs.entityCreator.id = function() {
+  return millis() + '_' + voidjs.entity_index();
+};
+
 // Build an entity
-voidjs.entityCreator.build = function(args) {
+voidjs.entityCreator.build = function(args, id) {
   var b2Vec2 = Box2D.Common.Math.b2Vec2;
   var world = voidjs.world;
   //console.log(voidjs.entityCreator.body);
   var entity = world.CreateBody(voidjs.entityCreator.body);
-  entity.id = millis() + '_' + voidjs.entity_index();
+  if (id) {
+    entity.id = id;
+  }
+  else {
+    entity.id = voidjs.entityCreator.id();
+  }
   //console.log(voidjs.entityCreator.fixture.shape);
   if (voidjs.entityCreator.fixture.shape.m_vertexCount === 0) {
     voidjs.entityCreator.fixture.shape.SetAsBox(0.2, 0.2);
@@ -285,7 +302,7 @@ voidjs.entityCreator.create_spawners = function(level) {
     if (Math.random() *1000 > 960) {
       // @TODO: Smarter placement (no entity placement near checkpoints)
       var pos = background.m_fixtureList.m_shape.m_centroid;
-      voidjs.entityCreator.create('sentry', [pos.x, pos.y]);
+      console.log(voidjs.entityCreator.create('sentry', [pos.x, pos.y], 0, 0));
     }
   }
 };

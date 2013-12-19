@@ -141,14 +141,21 @@ voidjs.descriptions.sentry = {
   }
 };
 voidjs.items = {};
-voidjs.items.gun = function(smart, damage, speed, cooldown) {
+voidjs.items.gun = function(smart, damage, speed, cooldown, magazine, reload_time) {
   if (speed === undefined) {
     speed = 8;
   }
   if (!cooldown) {
-    cooldown = 500; // milliseconds
+    cooldown = 250; // milliseconds
+  }
+  if (!magazine) {
+    magazine = 3; // shots
+  }
+  if (!reload_time) {
+    reload_time = 1000; // milliseconds
   }
   var acd = 0; // active cooldowns
+  var bullets = magazine;
 
   return function(self) {
     var target = voidjs.entities[self.target];
@@ -160,6 +167,12 @@ voidjs.items.gun = function(smart, damage, speed, cooldown) {
         // No cooldown active
         // Activate the cooldown
         acd = cooldown;
+        if (--bullets <= 0) {
+          // Refill the magazine
+          bullets = magazine;
+          // Apply reload time
+          acd = reload_time;
+        }
         // Shoot at target
         var p1 = self.GetPosition();
         var p2;
@@ -199,6 +212,14 @@ voidjs.items.player_shield = function(damage, cooldown) {
     }
   };
 };
+voidjs.activate_item = function(item, args) {
+  if (typeof item === 'function') {
+    item(args);
+  }
+  else if (typeof item === 'object') {
+    item.script(args);
+  }
+};
 voidjs.items.player_sword = function(damage, cooldown) {
   if (damage === undefined) {
     damage = 100;
@@ -206,16 +227,23 @@ voidjs.items.player_sword = function(damage, cooldown) {
   if (!cooldown) {
     cooldown = 500; // milliseconds
   }
+
+  // Que creation.
   var sword_id = voidjs.entityCreator.create('player_sword', [cooldown]);
 
-  return function(self) {
-    var sword = voidjs.entities[sword_id];
-    if (self.life > 0 && sword.cd <= 0) {
-      sword.life = sword.max_life;
-      sword.SetPosition(self.GetPosition());
-      sword.SetLinearVelocity(self.GetLinearVelocity());
-      sword.SetActive(true);
-      sword.cd = cooldown;
+
+  return {
+    entity_id: sword_id,
+    script: function(self) {
+      var sword = voidjs.entities[sword_id];
+      if (self.life > 0 && sword.cd <= 0) {
+        sword.life = sword.max_life;
+        sword.SetPosition(self.GetPosition());
+        //sword.SetRotation(self.GetRotation());
+        sword.SetLinearVelocity(self.GetLinearVelocity());
+        sword.SetActive(true);
+        sword.cd = cooldown;
+      }
     }
   };
 };
@@ -225,7 +253,7 @@ voidjs.items.player_sword = function(damage, cooldown) {
 voidjs.descriptions.player_sword = {
     map : [
     ['cd', 'after', 500],
-    //['fill', 'style', c[2]],
+    ['fill', 'style', "#FF0000"],
     ['decay', 'after', [50,100]],
     ['size', 'after', 0.5]
   ],
@@ -261,8 +289,6 @@ voidjs.descriptions.player_sword = {
           voidjs.camera.shake(camera, 0.2, 250);
           voidjs.audio.play('hurt', 1);
         }
-        // Goodbye bullet:
-        //voidjs.world.RemoveBody(bullet);
       }
     }
   ],
@@ -296,7 +322,7 @@ voidjs.descriptions.player_sword = {
     entity.kill = function() {
       //console.log('sword died');
       if (entity.IsActive()) {
-        entity.SetActive(false);
+        //entity.SetActive(false);
       }
       //voidjs.world.RemoveBody(entity);
     };
