@@ -316,6 +316,7 @@ voidjs.entityCreator.create_spawners = function(level) {
       // @TODO: Smarter placement (no entity placement near checkpoints)
       var index = parseInt(Math.random() * locations.length, 10);
       var loc = locations.splice(index, 1);
+      voidjs.entityCreator.create(type, loc[0], 0, 0);
       number--;
     }
   }
