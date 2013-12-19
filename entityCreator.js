@@ -305,8 +305,6 @@ voidjs.entityCreator.create_spawners = function(level) {
     locations.push([pos.x, pos.y]);
   }
 
-  console.log(locations);
-
   // @TODO: Base allocation on a difficulty variable (Amount of players * progression etc..)
   var allocations = {
     'sentry': 50,
@@ -314,14 +312,10 @@ voidjs.entityCreator.create_spawners = function(level) {
   };
   for (var type in allocations) {
     var number = allocations[type];
-    console.log(type);
-    console.log(number);
     while (number > 0 && locations.length > 0) {
       // @TODO: Smarter placement (no entity placement near checkpoints)
       var index = parseInt(Math.random() * locations.length, 10);
       var loc = locations.splice(index, 1);
-      console.log(loc[0]);
-      console.log(voidjs.entityCreator.create(type, loc[0], 0, 0));
       number--;
     }
   }
