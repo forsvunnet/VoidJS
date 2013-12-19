@@ -302,7 +302,7 @@ voidjs.entityCreator.create_spawners = function(level) {
     if (Math.random() *1000 > 960) {
       // @TODO: Smarter placement (no entity placement near checkpoints)
       var pos = background.m_fixtureList.m_shape.m_centroid;
-      console.log(voidjs.entityCreator.create('sentry', [pos.x, pos.y], 0, 0));
+      voidjs.entityCreator.create('sentry', [pos.x, pos.y], 0, 0);
     }
   }
 };

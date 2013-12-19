@@ -73,9 +73,17 @@ voidjs.descriptions.player = {
       weapon: voidjs.items.player_sword(),
       //shield: voidjs.items.player_shield()
     };
-    entity.Inflict = function(bullet) {
+    entity.Inflict = function(bullet, shake) {
       if (bullet.damage && entity.life) {
         entity.life -= bullet.damage;
+      }
+      if (shake === undefined) {
+        shake = 0.2;
+      }
+      if (shake && entity.isPlayer && entity.hasCamera) {
+        var camera = entity.playerNumber || 0;
+        voidjs.camera.shake(camera, shake, 250);
+        voidjs.audio.play('hurt', 1);
       }
     };
   }
@@ -236,10 +244,9 @@ voidjs.items.player_sword = function(damage, cooldown) {
     entity_id: sword_id,
     script: function(self) {
       var sword = voidjs.entities[sword_id];
-      if (self.life > 0 && sword.cd <= 0) {
+      if (sword && self.life > 0 && sword.cd <= 0) {
         sword.life = sword.max_life;
         sword.SetPosition(self.GetPosition());
-        //sword.SetRotation(self.GetRotation());
         sword.SetLinearVelocity(self.GetLinearVelocity());
         sword.SetActive(true);
         sword.cd = cooldown;
@@ -452,11 +459,6 @@ voidjs.descriptions.bullet = {
           var vel = vcore.a2v(Math.PI + angle + (Math.random() * 2 * r) -r, Math.random() * 5 + 1);
           var pos = bullet.GetPosition();
           voidjs.entityCreator.create('particle', [pos, vel]);
-        }
-        if (body.isPlayer && body.hasCamera) {
-          var camera = body.playerNumber || 0;
-          voidjs.camera.shake(camera, 0.2, 250);
-          voidjs.audio.play('hurt', 1);
         }
         // Goodbye bullet:
         voidjs.world.RemoveBody(bullet);

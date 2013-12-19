@@ -80,33 +80,39 @@ voidjs.update = function () {
  * Player respawner
  */
 voidjs.scripts.spawner = function () {
+  var b2Vec2 = Box2D.Common.Math.b2Vec2;
   // If player dies:
     // Wait x seconds
     // Respawn player at last checkpoint
   var ship = voidjs.player;
   var tick = 0;
   // Find this script in the que in order to self-destruct
-  var i = ship.active_scripts.getLength();
+  var script_id = ship.active_scripts.getLength();
   //console.log("Spawner at: " + i);
-  return function(){
+  return function() {
     if (tick > 60) {
       var pos = ship.checkpoint || {x:7, y:7};
+      //debugger;
       ship.SetPosition( pos );
 
-      for (var i = 0; i < ship.inventory.length; i++) {
+      for (var i in ship.inventory) {
         var item = ship.inventory[i];
         if (typeof item === 'object') {
           if (item.entity_id) {
-            voidjs.entities[item.entity_id].SetPosition(pos);
+            var item_entity = voidjs.entities[item.entity_id];
+            item_entity.SetPosition(pos);
+            item_entity.SetLinearVelocity(new b2Vec2(0,0));
+            item_entity.SetAngularVelocity(0);
           }
         }
       }
-
+      ship.SetLinearVelocity(new b2Vec2(0,0));
+      ship.SetAngularVelocity(0);
       ship.SetActive(true);
       ship.life = ship.max_life || 20;
       // Self-destruct
       console.log('Self destructing respawner');
-      ship.active_scripts.remove(i);
+      ship.active_scripts.remove(script_id);
     }
     tick++;
   };
