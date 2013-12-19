@@ -294,15 +294,35 @@ voidjs.entityCreator.reset = function (description){
 };
 
 voidjs.entityCreator.create_spawners = function(level) {
+  // @TODO: Allocation  (infi loop untill all allocated slots have been placed (of different types))
+
+  // Copy the locations of possible spawn locations:
+  var locations = [];
   for (var i = 0; i < voidjs.entity_type_tracker.background.length; i++) {
     var bgi = voidjs.entity_type_tracker.background[i];
     var background = voidjs.entities[bgi];
-    // @TODO: Allocation  (infi loop untill all allocated slots have been placed (of different types))
-    // Base allocation on a difficulty variable (Amount of players * progression etc..)
-    if (Math.random() *1000 > 960) {
+    var pos = background.m_fixtureList.m_shape.m_centroid;
+    locations.push([pos.x, pos.y]);
+  }
+
+  console.log(locations);
+
+  // @TODO: Base allocation on a difficulty variable (Amount of players * progression etc..)
+  var allocations = {
+    'sentry': 50,
+    'shard': 50
+  };
+  for (var type in allocations) {
+    var number = allocations[type];
+    console.log(type);
+    console.log(number);
+    while (number > 0 && locations.length > 0) {
       // @TODO: Smarter placement (no entity placement near checkpoints)
-      var pos = background.m_fixtureList.m_shape.m_centroid;
-      voidjs.entityCreator.create('sentry', [pos.x, pos.y], 0, 0);
+      var index = parseInt(Math.random() * locations.length, 10);
+      var loc = locations.splice(index, 1);
+      console.log(loc[0]);
+      console.log(voidjs.entityCreator.create(type, loc[0], 0, 0));
+      number--;
     }
   }
 };
