@@ -2,11 +2,27 @@
  <head>
   <meta charset="UTF-8" />
   <title>Void Game</title>
-  <style type="text/css"> body{margin: 0;} </style>
+  <style type="text/css">
+    body{margin: 0;}
+    #menu {
+      position: fixed;
+      left: 0; right: 0; top: 0; bottom: 0;
+      z-index: 3;
+      color: white;
+      -webkit-font-smoothing: antialiased;
+    }
+    #menu li {
+      cursor: pointer;
+    }
+    #menu li:hover {
+      opacity: 0.5;
+    }
+  </style>
  </head>
  <body>
   <div id="fps" style="position: fixed; color: #FFF; left: 10px; top: 10px; font-family: arial;"></div>
   <canvas id="canvas" width="600" height="400" ></canvas>
+  <div id="menu"></div>
  </body>
  <script type="text/javascript" src="jquery-2.0.3.min.js"></script>
  <script type="text/javascript" src="Box2dWeb-2.1a.3/Box2dWeb-2.1.a.3.js"></script>

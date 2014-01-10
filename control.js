@@ -7,14 +7,10 @@ voidjs.control.keydown = function(e) {
 };
 voidjs.control.keyup = function(e) {
   var key = voidjs.key;
-  if(key.fire) {
+  if (key.fire) {
     voidjs.activate_item(voidjs.player.inventory.weapon, voidjs.player);
   }
   if(key.select) {
-    //var vel = voidjs.player.GetLinearVelocity();
-    //var s1 = Math.sqrt(vel.x * vel.x + vel.y * vel.y);
-    //console.log(vel);
-    //console.log(s1);
   }
 
   voidjs.control.toggle(e.keyCode, false);

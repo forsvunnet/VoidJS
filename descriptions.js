@@ -245,6 +245,7 @@ voidjs.items.player_sword = function(damage, cooldown) {
     script: function(self) {
       var sword = voidjs.entities[sword_id];
       if (sword && self.life > 0 && sword.cd <= 0) {
+        sword.activation_id++;
         sword.life = sword.max_life;
         sword.SetPosition(self.GetPosition());
         sword.SetLinearVelocity(self.GetLinearVelocity());
@@ -262,7 +263,7 @@ voidjs.descriptions.player_sword = {
     ['cd', 'after', 500],
     ['fill', 'style', "#FF0000"],
     ['decay', 'after', [50,100]],
-    ['size', 'after', 0.5]
+    ['size', 'after', 0.75]
   ],
   style: {
     stroke: false,
@@ -278,7 +279,16 @@ voidjs.descriptions.player_sword = {
     function (args) {
       var bullet = args[1];
       var body = args[0];
-      if (bullet.life > 0 && body.team !== bullet.team){
+      // Return if the body has been hit already by the same activation
+      if (body.hit_by !== undefined && body.hit_by[bullet.activation_id] == bullet.id) {
+        return;
+      }
+
+      if (bullet.life > 0 && body.team !== bullet.team && body.life) {
+        // Register a new activation hit
+        if (body.hit_by == undefined) { body.hit_by = {}; }
+        body.hit_by[bullet.id] = bullet.activation_id;
+
         if (bullet.damage && body.life) {
           body.life -= bullet.damage;
         }
@@ -288,7 +298,7 @@ voidjs.descriptions.player_sword = {
         var r = Math.PI / 6; // 30 degrees freedom
         for (var i = 0; i < amount; i++) {
           var vel = vcore.a2v(Math.PI + angle + (Math.random() * 2 * r) -r, Math.random() * 5 + 1);
-          var pos = bullet.GetPosition();
+          var pos = body.GetPosition();
           voidjs.entityCreator.create('particle', [pos, vel]);
         }
         if (body.isPlayer && body.hasCamera) {
@@ -304,6 +314,7 @@ voidjs.descriptions.player_sword = {
     entity.m_fixtureList.m_shape.SetAsBox(args[3], args[3]);
     entity.angularVelocity = (Math.random() * 15 + 5) * (Math.random() > 0.5 ? -1 : 1);
     entity.life = 0;
+    entity.activation_id = 0;
     entity.damage = 500;
     entity.team = 1;
     entity.max_life = 250;//entity.life;
@@ -326,10 +337,11 @@ voidjs.descriptions.player_sword = {
     joint.Initialize(entity, voidjs.player, {x:0, y:0});
     voidjs.world.CreateJoint(joint);
     entity.active_scripts.register(voidjs.scripts.fade(entity));
+    entity.SetActive(false);
     entity.kill = function() {
       //console.log('sword died');
       if (entity.IsActive()) {
-        //entity.SetActive(false);
+        entity.SetActive(false);
       }
       //voidjs.world.RemoveBody(entity);
     };
