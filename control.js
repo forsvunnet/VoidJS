@@ -143,7 +143,6 @@ voidjs.control.gamepad_tick = function(gamepads) {
     if (gamepad) {
       player = voidjs.control.player[gamepad.index];
       if (player) {
-    console.log(gamepad.state.RIGHT_STICK_X + ', ' + gamepad.state.RIGHT_STICK_Y);
         player.direction.x = gamepad.state.RIGHT_STICK_X;
         player.direction.y = gamepad.state.RIGHT_STICK_Y;
       }

@@ -94,8 +94,6 @@ var apply_movement = function(ship, device) {
       voidjs.control.player[device].direction.y
     );
     direction.Multiply(20);
-    console.log(direction);
-    console.log(voidjs.control.player[device].direction);
   }
   if (direction.x !== 0 || direction.y !== 0) {
     ship.ApplyForce(direction, ship.GetPosition());
