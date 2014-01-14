@@ -17,10 +17,13 @@ voidjs.update = function () {
   }// */
 
   for (var i in voidjs.control.player) {
-    var ship = voidjs.entities[voidjs.control.player[i]];
-    if (i == 'keyboard') {
-      apply_movement(ship);
+    var cO, controller = voidjs.control.player[i];
+    if (!controller.eid) {
+      cO = voidjs.entities[voidjs.entity_type_tracker.checkpoint[0]].GetPosition();
+      controller.eid = voidjs.entityCreator.create('player', [cO.x, cO.y], 0 ,0);
     }
+    var ship = voidjs.entities[controller.eid];
+    apply_movement(ship, i);
     voidjs.draw(ship);
     var shipAt = ship.GetPosition();
     // Per alive player :
@@ -66,21 +69,34 @@ voidjs.update = function () {
     world.ClearForces();
   }
 };
-var apply_movement = function(ship) {
+var apply_movement = function(ship, device) {
   var b2Vec2 = Box2D.Common.Math.b2Vec2;
-  var key = voidjs.key;
+  var direction;
+
   ship.ApplyTorque(0.03);
-  var direction = new b2Vec2(0,0);
-  direction.x +=
-    key.left  ? -1:
-    key.right ?  1:
-    0;
-  direction.y +=
-    key.up    ? -1:
-    key.down  ?  1:
-    0;
-  direction.Normalize();
-  direction.Multiply(20);
+  if (device == 'keyboard') {
+    var key = voidjs.key;
+    direction = new b2Vec2(0,0);
+    direction.x +=
+      key.left  ? -1:
+      key.right ?  1:
+      0;
+    direction.y +=
+      key.up    ? -1:
+      key.down  ?  1:
+      0;
+    direction.Normalize();
+    direction.Multiply(20);
+  }
+  else {
+    direction = new b2Vec2(
+      voidjs.control.player[device].direction.x,
+      voidjs.control.player[device].direction.y
+    );
+    direction.Multiply(20);
+    console.log(direction);
+    console.log(voidjs.control.player[device].direction);
+  }
   if (direction.x !== 0 || direction.y !== 0) {
     ship.ApplyForce(direction, ship.GetPosition());
   }

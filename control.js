@@ -3,6 +3,7 @@
 // eg. a listening function in update should call
 // if (voids.key.#.check()) {} to see if a key has been pressed
 
+
 // Init function that only runs once (guaranteed);
 voidjs.control.once = function() {
   var once = false;
@@ -16,18 +17,30 @@ voidjs.control.once = function() {
       document.addEventListener("mouseup", voidjs.control.mouseup);
       document.addEventListener("mousedown", voidjs.control.mousedown);
       document.addEventListener("mousemove", voidjs.control.mousemove);
+
+      // Set up gamepad listeners
+      voidjs.control.gamepad = new Gamepad();
+      voidjs.control.gamepad.bind(Gamepad.Event.CONNECTED, voidjs.control.gamepad_connected);
+      voidjs.control.gamepad.bind(Gamepad.Event.DISCONNECTED, voidjs.control.gamepad_disconnected);
+      voidjs.control.gamepad.bind(Gamepad.Event.TICK, voidjs.control.gamepad_tick);
+      if (!voidjs.control.gamepad.init()) {
+        alert('Your browser does not support gamepads, get the latest Google Chrome or Firefox.');
+      }
     }
   };
 }();
 
 voidjs.control.player = {};
 
+// Keyboard:
+
 voidjs.control.keydown = function(e) {
   voidjs.control.toggle(e.keyCode, true);
 
   if (!voidjs.control.player['keyboard']) {
-    cO = voidjs.entities[voidjs.entity_type_tracker.checkpoint[0]].GetPosition();
-    voidjs.control.player['keyboard'] = voidjs.entityCreator.create('player', [cO.x, cO.y], 0 ,1);
+    voidjs.control.player['keyboard'] = {
+      eid: 0
+    };
   }
 };
 voidjs.control.keyup = function(e) {
@@ -111,99 +124,29 @@ voidjs.control.mousemove = function (e) {
   mouse.y = (e.clientY - canvasPosition.y) / 30;
 };
 
-  var gamepadjs = (function() {
-    var gamepad = new Gamepad();
-
-    gamepad.bind(Gamepad.Event.CONNECTED, function(device) {
-      console.log('Connected', device);
-
-      $('#gamepads').append('<li id="gamepad-' + device.index + '"><h1>Gamepad #' + device.index + ': &quot;' + device.id + '&quot;</h1></li>');
-      
-      var mainWrap = $('#gamepad-' + device.index),
-        statesWrap,
-        logWrap,
-        control,
-        value,
-        i;
-      
-      mainWrap.append('<strong>State</strong><ul id="states-' + device.index + '"></ul>');
-      mainWrap.append('<strong>Events</strong><ul id="log-' + device.index + '"></ul>');
-
-      statesWrap = $('#states-' + device.index)
-      logWrap = $('#log-' + device.index)
-
-      for (control in device.state) {
-        value = device.state[control];
-        
-        statesWrap.append('<li>' + control + ': <span id="state-' + device.index + '-' + control + '">' + value + '</span></li>');
+// Gamepad
+voidjs.control.gamepad_connected = function(device) {
+  var b2Vec2 = Box2D.Common.Math.b2Vec2;
+  if (!voidjs.control.player[device.index]) {
+    voidjs.control.player[device.index] = {
+      eid: 0,
+      direction: new b2Vec2(0,0)
+    };
+  }
+};
+voidjs.control.gamepad_disconnected = function(device) {};
+voidjs.control.gamepad_tick = function(gamepads) {
+  var b2Vec2 = Box2D.Common.Math.b2Vec2;
+  var gamepad, player, i;
+  for (i = 0; i < gamepads.length; i++) {
+    gamepad = gamepads[i];
+    if (gamepad) {
+      player = voidjs.control.player[gamepad.index];
+      if (player) {
+    console.log(gamepad.state.RIGHT_STICK_X + ', ' + gamepad.state.RIGHT_STICK_Y);
+        player.direction.x = gamepad.state.RIGHT_STICK_X;
+        player.direction.y = gamepad.state.RIGHT_STICK_Y;
       }
-      for (i = 0; i < device.buttons.length; i++) {
-        value = device.buttons[i];
-        statesWrap.append('<li>Raw Button ' + i + ': <span id="button-' + device.index + '-' + i + '">' + value + '</span></li>');
-      }
-      for (i = 0; i < device.axes.length; i++) {
-        value = device.axes[i];
-        statesWrap.append('<li>Raw Axis ' + i + ': <span id="axis-' + device.index + '-' + i + '">' + value + '</span></li>');
-      }
-      
-      $('#connect-notice').hide();
-    });
-
-    gamepad.bind(Gamepad.Event.DISCONNECTED, function(device) {
-      console.log('Disconnected', device);
-      
-      $('#gamepad-' + device.index).remove();
-      
-      if (gamepad.count() == 0) {
-        $('#connect-notice').show();
-      }
-    });
-
-    gamepad.bind(Gamepad.Event.TICK, function(gamepads) {
-      var gamepad,
-        wrap,
-        control,
-        value,
-        i,
-        j;
-      
-      for (i = 0; i < gamepads.length; i++) {
-        gamepad = gamepads[i];
-        wrap = $('#gamepad-' + i);
-
-        if (gamepad) {
-          for (control in gamepad.state) {
-            value = gamepad.state[control];
-
-            $('#state-' + gamepad.index + '-' + control + '').html(value);
-          }
-          for (j = 0; j < gamepad.buttons.length; j++) {
-            value = gamepad.buttons[j];
-
-            $('#button-' + gamepad.index + '-' + j + '').html(value);
-          }
-          for (j = 0; j < gamepad.axes.length; j++) {
-            value = gamepad.axes[j];
-
-            $('#axis-' + gamepad.index + '-' + j + '').html(value);
-          }
-        }
-      }
-    });
-
-    gamepad.bind(Gamepad.Event.BUTTON_DOWN, function(e) {
-      $('#log-' + e.gamepad.index).append('<li>' + e.control + ' down</li>');
-    });
-    
-    gamepad.bind(Gamepad.Event.BUTTON_UP, function(e) {
-      $('#log-' + e.gamepad.index).append('<li>' + e.control + ' up</li>');
-    });
-
-    gamepad.bind(Gamepad.Event.AXIS_CHANGED, function(e) {
-      $('#log-' + e.gamepad.index).append('<li>' + e.axis + ' changed to ' + e.value + '</li>');
-    });
-
-    if (!gamepad.init()) {
-      alert('Your browser does not support gamepads, get the latest Google Chrome or Firefox.');
     }
-  });
+  }
+};
