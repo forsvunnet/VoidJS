@@ -49,7 +49,9 @@ voidjs.descriptions.player = {
     entity.checkpoint = false;
     entity.isPlayer = true;
     entity.hasCamera = true;
-    entity.playerNumber = 0;
+    entity.player_number = voidjs.player.length;
+    entity.camera = vcore.camera();
+    entity.canvas = vcore.canvas(entity.player_number);
     entity.team = 1;
     entity.life = 10;
     entity.max_life = 10;
@@ -66,9 +68,10 @@ voidjs.descriptions.player = {
         var pos = entity.GetPosition();
         voidjs.entityCreator.create('particle', [pos, vel, c[3], 2, [1000, 2000], 0.1]);
       }
-      entity.active_scripts.register(voidjs.scripts.spawner());
+      entity.active_scripts.register(voidjs.scripts.spawner(entity));
     };
-    voidjs.player = entity;
+    voidjs.player.push(entity);
+    voidjs.fullscreen();
     entity.inventory = {
       weapon: voidjs.items.player_sword(),
       //shield: voidjs.items.player_shield()
@@ -80,9 +83,8 @@ voidjs.descriptions.player = {
       if (shake === undefined) {
         shake = 0.2;
       }
-      if (shake && entity.isPlayer && entity.hasCamera) {
-        var camera = entity.playerNumber || 0;
-        voidjs.camera.shake(camera, shake, 250);
+      if (shake && entity.isPlayer && entity.camera) {
+        entity.camera.shake(shake, 250);
         voidjs.audio.play('hurt', 1);
       }
     };
@@ -333,9 +335,10 @@ voidjs.descriptions.player_sword = {
     //var b2WeldJoint = Box2D.Dynamics.Joints.b2WeldJoint;
     var b2WeldJointDef = Box2D.Dynamics.Joints.b2WeldJointDef;
     var joint = new b2WeldJointDef();
-    entity.SetPosition(voidjs.player.GetPosition());
-    joint.Initialize(entity, voidjs.player, {x:0, y:0});
-    voidjs.world.CreateJoint(joint);
+    //@TODO: fix the three next lines
+    //entity.SetPosition(voidjs.player.GetPosition());
+    //joint.Initialize(entity, voidjs.player, {x:0, y:0});
+    //voidjs.world.CreateJoint(joint);
     entity.active_scripts.register(voidjs.scripts.fade(entity));
     entity.SetActive(false);
     entity.kill = function() {
@@ -384,7 +387,7 @@ voidjs.descriptions.player_shield = {
         }
         if (body.isPlayer && body.hasCamera) {
           var camera = body.playerNumber || 0;
-          voidjs.camera.shake(camera, 0.2, 250);
+          body.camera.shake(0.2, 250);
           voidjs.audio.play('hurt', 1);
         }
         // Goodbye bullet:
@@ -406,7 +409,8 @@ voidjs.descriptions.player_shield = {
     entity.cd = args[0];
 
     entity.active_scripts.register(function() {
-      entity.SetPosition(voidjs.player.GetPosition());
+      // @TODO: Fix the next line
+      //entity.SetPosition(voidjs.player.GetPosition());
       if (entity.cd > 0) {
         entity.cd -= voidjs.fps;
       }

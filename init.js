@@ -219,6 +219,19 @@ var c = [
   solarized.magenta, // Enemy color
   solarized.base03  // Checkpoint / End
 ];
+
+$('body').css('background', c[0]);
+
+vcore.canvas = function() {
+  var canvas = [$('#canvas').get(0)];
+  return function(current_canvas) {
+    // return the main canvas or make a new one.
+    if (canvas[current_canvas] === undefined) {
+      canvas[current_canvas] = $('<canvas>').insertAfter(canvas[0]).get(0);
+    }
+    return canvas[current_canvas];
+  };
+}();
 // @TODO:
 // Try to focus on essential functions.
 // Especially important are features that allow for
@@ -260,7 +273,6 @@ var c = [
 //          (We use box2d because of the AABB selection for rendering & other consistency issues)
 //
 var voidjs = {
-  canvas : document.getElementById('canvas'),
   key : {
     left:   false,
     right:  false,
@@ -274,6 +286,7 @@ var voidjs = {
       return index;
     };
   }(),
+  player: [],
   stencil: {},
   fps: 1000/30,
   destroy_entities: [],
@@ -291,12 +304,8 @@ var voidjs = {
   init: function() {
     // Init only happens once, the other functions can happen many times
     // Register all even listeners here
-    document.addEventListener("keydown", voidjs.control.keydown);
-    document.addEventListener("keyup", voidjs.control.keyup);
-    document.addEventListener("mouseup", voidjs.control.mouseup);
-    document.addEventListener("mousedown", voidjs.control.mousedown);
-    document.addEventListener("mousemove", voidjs.control.mousemove);
-    voidjs.canvas.style.backgroundColor = c[0];
+    voidjs.control.once();
+
     var scenes = {
       game: this.game,
       menu: this.menu.show
@@ -330,7 +339,8 @@ var voidjs = {
   // Initialise the game world
   init_game: function(level) {
     // Set up variables
-    chapter = voidjs.chapter || 0;
+    var chapter = voidjs.chapter || 0;
+    voidjs.player.length = 0;
     var b2Vec2            = Box2D.Common.Math.b2Vec2,
         b2AABB            = Box2D.Collision.b2AABB,
         b2BodyDef         = Box2D.Dynamics.b2BodyDef,
@@ -387,15 +397,53 @@ var voidjs = {
     // Add spawners
     voidjs.entityCreator.create_spawners();
 
+    //voidjs.entityCreator.create('player', [level.checkpoint[0][0], level.checkpoint[0][1]], 0 ,0);
+    //voidjs.entityCreator.create('player', [level.checkpoint[0][0], level.checkpoint[0][1]], 0 ,0);
+
     // Start the game
     voidjs.ticker = window.setInterval(voidjs.update, voidjs.fps);
   },
 };
 
+vcore.pos_canvas = function(canvas, w, h, x, y) {
+  canvas.width = w;
+  canvas.style.left = x;
+  canvas.height = h;
+  canvas.style.top = y;
+
+  return (w > h) ? h * 45 / w : 45;
+};
 voidjs.fullscreen = function() {
-  voidjs.canvas.width = window.innerWidth;
-  voidjs.canvas.height = window.innerHeight;
-  voidjs.scale = voidjs.canvas.height * 45 / 768;
+  var camera;
+  var wiw = window.innerWidth;
+  var wih = window.innerHeight;
+
+  // 1 Player
+  if (voidjs.player.length == 1) {
+    // Player 1
+    camera = voidjs.player[0].camera;
+    camera.scale = vcore.pos_canvas(voidjs.player[0].canvas, wiw, wih, 0, 0);
+  }
+
+  // 2 Player
+  if (voidjs.player.length == 2) {
+    // Player 1
+    camera = voidjs.player[0].camera;
+    if (voidjs.split_screen_horizontal) {
+      camera.scale = vcore.pos_canvas(voidjs.player[0].canvas, wiw / 2, wih, 0, 0);
+    }
+    else {
+      camera.scale = vcore.pos_canvas(voidjs.player[0].canvas, wiw , wih / 2, 0, 0);
+    }
+    // Player 2
+    camera = voidjs.player[1].camera;
+    if (voidjs.split_screen_horizontal) {
+      camera.scale = vcore.pos_canvas(voidjs.player[1].canvas, wiw / 2, wih, wiw / 2, 0);
+    }
+    else {
+      camera.scale = vcore.pos_canvas(voidjs.player[1].canvas, wiw, wih / 2, 0, wih / 2);
+    }
+  }
 };
 window.addEventListener('resize', voidjs.fullscreen, false);
 voidjs.fullscreen();

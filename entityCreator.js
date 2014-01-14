@@ -44,6 +44,9 @@ voidjs.entityCreator.buildLevel = function(level) {
   var entities = {};
   voidjs.entities = entities;
   for (var type in level) {
+    if (type == 'player') {
+      continue;
+    }
     //eg type = wall
     var struct = level[type];
     // struct = array of walls

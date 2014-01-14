@@ -3,49 +3,47 @@ var is_array = function (value) {
         typeof value === 'object' &&
         value.constructor === Array;
 };
-voidjs.camera = {
-  eq: {0:{x:0, y:0}},
-  shakers: {},
-  shake: function(camera, magnitude, duration) {
-    var shakers = voidjs.camera.shakers;
-    shakers[camera] = [magnitude, duration, duration];
-  },
-  update: function() {
-    var shakers = voidjs.camera.shakers;
-    var eq = voidjs.camera.eq;
-    for (var camera in shakers) {
-      var shaker = shakers[camera];
-      if (shaker[2] > 0) {
+vcore.camera = function() {
+  var shaker = [];
+  var eq = {x:0, y:0};
+  return {
+    shake: function(magnitude, duration) {
+      shaker = [magnitude, duration, duration];
+    },
+    update: function() {
+      if (shaker > 0) {
         var r = lerp(0, shaker[0], shaker[2] / shaker[1]);
-        eq[camera] = {
+        eq = {
           x: Math.random() * r * 2 - r,
           y: Math.random() * r * 2 - r
         };
         shaker[2] -= voidjs.fps;
       } else {
-        delete shakers[camera];
-        eq[camera] = {x:0, y:0};
+        shaker.length = 0;
+        eq = {x:0, y:0};
       }
-    }
-  }
+    },
+    eq: eq
+  };
 };
 //voidjs.camera.shake(0, 5, 1000);
 
-voidjs.draw = function() {
+voidjs.draw = function(player) {
   if (voidjs.time) {
     var fps = 1000 / (new Date().getTime() - voidjs.time);
-    document.getElementById('fps').innerHTML = fps + '<br>' + voidjs.player.life;
+    //document.getElementById('fps').innerHTML = fps + '<br>' + voidjs.player.life;
   }
-  voidjs.camera.update();
+  player.camera.update();
   voidjs.time = new Date().getTime();
-  var canvas = voidjs.canvas;
+  //var player = voidjs.player;
+  var canvas = player.canvas;
   var entities = voidjs.entities;
   var ctx = canvas.getContext('2d');
   var b2AABB = Box2D.Collision.b2AABB;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   voidjs.ctx = ctx;
 
-  var ship_pos = voidjs.player.GetPosition();
+  var ship_pos = player.GetPosition();
   var plate = new b2AABB();
   var area = 9;
   plate.lowerBound = {x: ship_pos.x - area, y: ship_pos.y - area};
@@ -67,24 +65,22 @@ voidjs.draw = function() {
   for (var i in layers) {
     var layer = layers[i];
     for (var body in que[layer]){
-      //que[layer][body].draw(camera);
-      que[layer][body].draw(0);
+      que[layer][body].draw(player);
     }
   }
 };
-voidjs.stencil.drawEntity = function (camera) {
+voidjs.stencil.drawEntity = function (player) {
   var style = this.style || {stroke:'red'};
   var rotation = this.GetAngle();
   var entity_pos = this.GetPosition();
   var position;
-  //var ship_pos = voidjs.player[camera].GetPosition();
-  var ship_pos = voidjs.player.GetPosition();
-  var eq = voidjs.camera.eq;
+  var ship_pos = player.GetPosition();
+  var eq = player.camera.eq;
+  var canvas = player.canvas;
   var scale = voidjs.scale || 30;
   var cpos = {
-    //x: voidjs.canvas[camera].width/2/scale - ship_pos.x + eq[camera].x,
-    x:  (voidjs.canvas.width/2/scale) - ship_pos.x + eq[camera].x,
-    y: (voidjs.canvas.height/2/scale) - ship_pos.y + eq[camera].y
+    x:  (canvas.width/2/scale) - ship_pos.x + eq.x,
+    y: (canvas.height/2/scale) - ship_pos.y + eq.y
   };
   if (style.art) {
     for (var i in style.art) {

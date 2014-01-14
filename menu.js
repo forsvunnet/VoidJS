@@ -79,12 +79,12 @@ voidjs.menu = {};
     // #5 : Game settings??
     //voidjs.goto('game');
     // host the function inside to get access to elements
-    var ctx = voidjs.canvas.getContext('2d');
-    voidjs.ctx = ctx;
+    //var ctx = voidjs.canvas.getContext('2d');
+    //voidjs.ctx = ctx;
     var selector = 0;
     var update, lock = false;
     var interpret = function() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      //ctx.clearRect(0, 0, canvas.width, canvas.height);
       var y = 1;
       for (var i in elements) {
         var element = elements[i];

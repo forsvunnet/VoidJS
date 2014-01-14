@@ -1,17 +1,13 @@
 // Update
 voidjs.update = function () {
   voidjs.entityCreator.lateCreate();
-  voidjs.draw();
   var mouse = voidjs.control.mouse,
       world = voidjs.world,
-      key = voidjs.key,
-      ship = voidjs.player,
       destroy_entities = voidjs.destroy_entities,
       active_entities = voidjs.active_entities,
       entities = voidjs.entities;
   var b2Vec2 = Box2D.Common.Math.b2Vec2;
   var b2AABB = Box2D.Collision.b2AABB;
-  var shipAt = ship.GetPosition();
   //console.log(ship.m_linearVelocity.x + ', ' + ship.m_linearVelocity.y);
   /* Mouse experiment:
   if (mouse.active) {
@@ -20,22 +16,31 @@ voidjs.update = function () {
     ship.ApplyForce(mR, shipAt);
   }// */
 
-  // Per alive player :
-  if (ship.IsActive()) {
-    // Trigger AI's:
-    var pos = ship.GetPosition();
-    var plate = new b2AABB();
-    var area = 7;
-    plate.lowerBound = {x: pos.x - area, y: pos.y - area};
-    plate.upperBound = {x: pos.x + area, y: pos.y + area};
+  for (var i in voidjs.control.player) {
+    var ship = voidjs.entities[voidjs.control.player[i]];
+    if (i == 'keyboard') {
+      apply_movement(ship);
+    }
+    voidjs.draw(ship);
+    var shipAt = ship.GetPosition();
+    // Per alive player :
+    if (ship.IsActive()) {
+      // Trigger AI's:
+      var pos = ship.GetPosition();
+      var plate = new b2AABB();
+      var area = 7;
+      plate.lowerBound = {x: pos.x - area, y: pos.y - area};
+      plate.upperBound = {x: pos.x + area, y: pos.y + area};
 
-    voidjs.world.QueryAABB(function (fixture){
-      if (fixture.m_body.isAI || fixture.isAI) {
-        fixture.m_body.scripts.call(fixture.m_body);
-      }
-      return true;
-    }, plate);
-  }
+      voidjs.world.QueryAABB(function (fixture){
+        if (fixture.m_body.isAI || fixture.isAI) {
+          fixture.m_body.scripts.call(fixture.m_body);
+        }
+        return true;
+      }, plate);
+    }
+  };
+
   var i, j;
   // very slow loop: (Should be discontinued)
   for (i in entities) {
@@ -54,7 +59,17 @@ voidjs.update = function () {
   // Clear array
   destroy_entities.length = 0;
 
-  ship.ApplyTorque(0.02);
+
+  if (world) {
+    world.Step(voidjs.fps / 1000, 10, 10);
+    world.DrawDebugData();
+    world.ClearForces();
+  }
+};
+var apply_movement = function(ship) {
+  var b2Vec2 = Box2D.Common.Math.b2Vec2;
+  var key = voidjs.key;
+  ship.ApplyTorque(0.03);
   var direction = new b2Vec2(0,0);
   direction.x +=
     key.left  ? -1:
@@ -67,24 +82,20 @@ voidjs.update = function () {
   direction.Normalize();
   direction.Multiply(20);
   if (direction.x !== 0 || direction.y !== 0) {
-    ship.ApplyForce(direction, shipAt);
-  }
-  if (world) {
-    world.Step(voidjs.fps / 1000, 10, 10);
-    world.DrawDebugData();
-    world.ClearForces();
+    ship.ApplyForce(direction, ship.GetPosition());
   }
 };
 
 /**
  * Player respawner
  */
-voidjs.scripts.spawner = function () {
+voidjs.scripts.spawner = function (self) {
   var b2Vec2 = Box2D.Common.Math.b2Vec2;
   // If player dies:
     // Wait x seconds
     // Respawn player at last checkpoint
-  var ship = voidjs.player;
+    //console.log(test);
+  var ship = self;
   var tick = 0;
   // Find this script in the que in order to self-destruct
   var script_id = ship.active_scripts.getLength();
@@ -111,7 +122,7 @@ voidjs.scripts.spawner = function () {
       ship.SetActive(true);
       ship.life = ship.max_life || 20;
       // Self-destruct
-      console.log('Self destructing respawner');
+      //console.log('Self destructing respawner');
       ship.active_scripts.remove(script_id);
     }
     tick++;
@@ -124,10 +135,13 @@ voidjs.scripts.spawner = function () {
 voidjs.scripts.checkpoint = function(args){
   var body = args[0];
   var sensor = args[1];
-  if (body.hasOwnProperty('checkpoint') && body.isPlayer) {
-    body.checkpoint = sensor.GetPosition();
-    // Activated checkpoint code:
-    console.log('Checkpoint Activated');
+  if (body.isPlayer) {
+    for (var i = 0; i < voidjs.player.length; i ++) {
+      var player = voidjs.player[i];
+      if (player.hasOwnProperty('checkpoint')) {
+        player.checkpoint = sensor.GetPosition();
+      }
+    }
   }
 };
 
