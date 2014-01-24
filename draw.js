@@ -11,16 +11,15 @@ vcore.camera = function() {
       shaker = [magnitude, duration, duration];
     },
     update: function() {
-      if (shaker > 0) {
+      if (shaker[2] > 0) {
         var r = lerp(0, shaker[0], shaker[2] / shaker[1]);
-        eq = {
-          x: Math.random() * r * 2 - r,
-          y: Math.random() * r * 2 - r
-        };
+        eq.x =  Math.random() * r * 2 - r;
+        eq.y = Math.random() * r * 2 - r;
         shaker[2] -= voidjs.fps;
       } else {
         shaker.length = 0;
-        eq = {x:0, y:0};
+        eq.x = 0;
+        eq.y = 0;
       }
     },
     eq: eq

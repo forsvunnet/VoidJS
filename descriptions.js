@@ -303,9 +303,9 @@ voidjs.descriptions.player_sword = {
           var pos = body.GetPosition();
           voidjs.entityCreator.create('particle', [pos, vel]);
         }
-        if (body.isPlayer && body.hasCamera) {
-          var camera = body.player_number || 0;
-          voidjs.camera.shake(camera, 0.2, 250);
+        if (body.isPlayer) console.log(body);
+        if (body.isPlayer && body.camera) {
+          body.camera.shake(0.2, 250);
           voidjs.audio.play('hurt', 1);
         }
       }
