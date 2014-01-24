@@ -119,6 +119,7 @@ voidjs.entityCreator.build = function(args, id) {
   entity.vertices = entity.m_fixtureList.m_shape.m_vertices;
   entity.draw = voidjs.stencil.drawEntity;
   entity.style = voidjs.entityCreator.style;
+  voidjs.entityCreator.style = {};
 
   // Creates a new instance of a script register
   // It's quite complex code so better leave it at that
