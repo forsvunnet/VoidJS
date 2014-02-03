@@ -172,20 +172,30 @@ voidjs.entityCreator.prepare = function (type, args) {
     ];
 
     var data = {}; // A temporary data obj used by the specials
-    var special = {
-      'x' : 0,
-      'y' : function (definition, data) {
-        // definition = bodyDef
-        definition.position = new Box2D.Common.Math.b2Vec2(data['x'], data['y']);
-      },
-      'width' : 0,
-      'height' : function (definition, data) {
-        definition.shape.SetAsBox(data['width'], data['height']);
-      }
-    };
+    var special = voidjs.descriptions_special;
 
     // Override defaults with description definitions
-    if (description.map !== undefined) { map = description.map; }
+    if (description.map !== undefined) {
+      map = [];
+      for (i =0; i < description.map.length; i++) {
+        var key = description.map[i];
+        var arguments = voidjs.descriptions_map[key];
+
+        // The key and arguments must be consolidated because
+        // right now they look like this:
+        // Key = 'width'
+        // Arguments = ['fixture', 1]
+
+        // Build a packet with keys and arguments
+        var packet = [key];
+        for (j = 0; j < arguments.length; j++) {
+          packet.push(arguments[j]);
+        }
+
+        // Place the packet in the map
+        map.push(packet);
+      }
+    }
     var required = 0;
     for (i = 0; i < map.length; i++) {
       required = i;
@@ -195,7 +205,7 @@ voidjs.entityCreator.prepare = function (type, args) {
     }
     //if (description.required !== undefined) { required = description.required; }
     // @TODO: Count required instead
-    if (description.special !== undefined) { special = description.special; }
+    //if (description.special !== undefined) { special = description.special; }
     if (description.scripts !== undefined) { voidjs.entityCreator.scripts = description.scripts; }
     if (description.after !== undefined) { voidjs.entityCreator.after = description.after; }
 

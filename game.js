@@ -345,3 +345,62 @@ voidjs.scripts.regen = function (self, rate) {
     }
   };
 };
+
+voidjs.scripts.item_sword = function (args) {
+  var bullet = args[1];
+  var body = args[0];
+  // Return if the body has been hit already by the same activation
+  if (body.hit_by !== undefined && body.hit_by[bullet.activation_id] == bullet.id) {
+    return;
+  }
+
+  if (bullet.life > 0 && body.team !== bullet.team && body.life) {
+    // Register a new activation hit
+    if (body.hit_by == undefined) { body.hit_by = {}; }
+    body.hit_by[bullet.id] = bullet.activation_id;
+
+    if (bullet.damage && body.life) {
+      body.life -= bullet.damage;
+    }
+    // Particles in the reverse direction of the hit:
+    var amount = Math.random() * 2 + 1;
+    var angle = vcore.v2a(bullet.m_linearVelocity);
+    var r = Math.PI / 6; // 30 degrees freedom
+    for (var i = 0; i < amount; i++) {
+      var vel = vcore.a2v(Math.PI + angle + (Math.random() * 2 * r) -r, Math.random() * 5 + 1);
+      var pos = body.GetPosition();
+      voidjs.entityCreator.create('particle', [pos, vel]);
+    }
+    //if (body.isPlayer) console.log(body);
+    if (body.isPlayer && body.camera) {
+      body.camera.shake(0.2, 250);
+      voidjs.audio.play('hurt', 1);
+    }
+  }
+};
+
+voidjs.scripts.item_shield = function (args) {
+  var bullet = args[1];
+  var body = args[0];
+  if (body.team !== bullet.team){
+    console.log(body.team);
+    console.log(bullet.team);
+    if (bullet.damage && body.life) {
+      body.life -= bullet.damage;
+    }
+    // Particles in the reverse direction of the hit:
+    var amount = Math.random() * 2 + 1;
+    var angle = vcore.v2a(bullet.m_linearVelocity);
+    var r = Math.PI / 6; // 30 degrees freedom
+    for (var i = 0; i < amount; i++) {
+      var vel = vcore.a2v(Math.PI + angle + (Math.random() * 2 * r) -r, Math.random() * 5 + 1);
+      var pos = bullet.GetPosition();
+      voidjs.entityCreator.create('particle', [pos, vel]);
+    }
+    if (body.isPlayer && body.hasCamera) {
+      var camera = body.playerNumber || 0;
+      body.camera.shake(0.2, 250);
+      voidjs.audio.play('hurt', 1);
+    }
+  }
+};

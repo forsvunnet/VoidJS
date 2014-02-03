@@ -1,6 +1,6 @@
 voidjs.descriptions = {};
 voidjs.descriptions_map = {
-  'vertices': ['fixture', vcore.aTob2Vec2],
+  'vertices': ['fixture'],
   'x': ['body'],
   'y': ['body'],
   'width': ['fixture', 0.3],
@@ -14,31 +14,45 @@ voidjs.descriptions_map = {
   'p2': ['body'],
   'speed': ['body'],
   'damage': ['body'],
+  'position': ['body'],
+  'velocity': ['body'],
+  'fill': ['style', c[4]],
+  'linearDamping': ['body', 2],
 }
 
-  var _special = {
-    'p1' : 0,
-    'p2' : 0,
-    'speed' : 0,
-    'damage' : function(definition, data) {
-      var p1 = data['p1'], p2 = data['p2'];
-      var angle = vcore.v2a({x: p2.x - p1.x, y: p2.y - p1.y});
-      var vel = vcore.a2v(angle, data['speed']);
-      //vel.x*=-1;
-      definition.linearVelocity = vel;
-      var d = vcore.a2v(angle, 0.1);
+voidjs.descriptions_special = {
+  'x' : 0,
+  'y' : function (definition, data) {
+    // definition = bodyDef
+    definition.position = new Box2D.Common.Math.b2Vec2(data['x'], data['y']);
+  },
+  'width' : 0,
+  'height' : function (definition, data) {
+    // definition = fixtureDef
+    definition.shape.SetAsBox(data['width'], data['height']);
+  },
+  'p1' : 0,
+  'p2' : 0,
+  'speed' : 0,
+  'damage' : function(definition, data) {
+    var p1 = data['p1'], p2 = data['p2'];
+    var angle = vcore.v2a({x: p2.x - p1.x, y: p2.y - p1.y});
+    var vel = vcore.a2v(angle, data['speed']);
+    //vel.x*=-1;
+    definition.linearVelocity = vel;
+    var d = vcore.a2v(angle, 0.1);
 
-      definition.position = {x: p1.x + d.x, y: p1.y + d.y};
-    },
-    'position': 0,
-    'velocity' : function(definition, data) {
-      var p1 = data['position'];
-      var d  = data['velocity'];
-      definition.position = {x: p1.x, y: p1.y};
-      definition.linearVelocity = d;
-    },
-    'vertices': vcore.aTob2Vec2
-  };
+    definition.position = {x: p1.x + d.x, y: p1.y + d.y};
+  },
+  'position': 0,
+  'velocity' : function(definition, data) {
+    var p1 = data['position'];
+    var d  = data['velocity'];
+    definition.position = {x: p1.x, y: p1.y};
+    definition.linearVelocity = d;
+  },
+  'vertices': vcore.aTob2Vec2
+};
 
 // Walls
 voidjs.descriptions.wall = {
@@ -311,14 +325,7 @@ voidjs.descriptions.bullet = {
 };
 
 voidjs.descriptions.particle = {
-  map : [
-    ['position', 'body'],
-    ['velocity', 'body'],
-    ['fill', 'style', c[4]],
-    ['linearDamping', 'body', 2],
-    ['decay', 'after', [500,1000]],
-    ['size', 'after', 0.05]
-  ],
+  map : ['position', 'velocity', 'fill', 'linearDamping', 'decay', 'size'],
   style: {
     stroke: false,
     layer: 20

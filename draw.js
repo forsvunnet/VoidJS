@@ -25,7 +25,6 @@ vcore.camera = function() {
     eq: eq
   };
 };
-//voidjs.camera.shake(0, 5, 1000);
 
 voidjs.draw = function(player) {
   if (voidjs.time) {
