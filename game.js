@@ -8,6 +8,7 @@ voidjs.update = function () {
       entities = voidjs.entities;
   var b2Vec2 = Box2D.Common.Math.b2Vec2;
   var b2AABB = Box2D.Collision.b2AABB;
+  var i, j;
   //console.log(ship.m_linearVelocity.x + ', ' + ship.m_linearVelocity.y);
   /* Mouse experiment:
   if (mouse.active) {
@@ -16,7 +17,14 @@ voidjs.update = function () {
     ship.ApplyForce(mR, shipAt);
   }// */
 
-  for (var i in voidjs.control.player) {
+  var _handle_query = function (fixture){
+    if (fixture.m_body.isAI || fixture.isAI) {
+      fixture.m_body.scripts.call(fixture.m_body);
+    }
+    return true;
+  };
+
+  for (i in voidjs.control.player) {
     var cO, controller = voidjs.control.player[i];
     if (!controller.eid) {
       cO = voidjs.entities[voidjs.entity_type_tracker.checkpoint[0]].GetPosition();
@@ -35,16 +43,10 @@ voidjs.update = function () {
       plate.lowerBound = {x: pos.x - area, y: pos.y - area};
       plate.upperBound = {x: pos.x + area, y: pos.y + area};
 
-      voidjs.world.QueryAABB(function (fixture){
-        if (fixture.m_body.isAI || fixture.isAI) {
-          fixture.m_body.scripts.call(fixture.m_body);
-        }
-        return true;
-      }, plate);
+      voidjs.world.QueryAABB(_handle_query, plate);
     }
-  };
+  }
 
-  var i, j;
   // very slow loop: (Should be discontinued)
   for (i in entities) {
     if (entities[i].active_scripts !== undefined) {
@@ -356,7 +358,7 @@ voidjs.scripts.item_sword = function (args) {
 
   if (bullet.life > 0 && body.team !== bullet.team && body.life) {
     // Register a new activation hit
-    if (body.hit_by == undefined) { body.hit_by = {}; }
+    if (body.hit_by === undefined) { body.hit_by = {}; }
     body.hit_by[bullet.id] = bullet.activation_id;
 
     if (bullet.damage && body.life) {
