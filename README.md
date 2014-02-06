@@ -17,33 +17,32 @@ It features:
 To be implemented:
 ------------------
 - Sounds
-- Scene graph for the canvas drawing system
 - Multiplayer via node.js and socket.io
 
 Aims:
 -----
 
 ### Pluggable
-VoidJS should be extendable by modules instead of having to change the core.
+VoidJS should be extendable by modules without having to change the core.
 
 ### Basic game mechanics
-VoidJS should include the most basic game mechanics and leave more advanced mechanics to modules.
+VoidJS should include basic game mechanics and leave more advanced mechanics to modules.
 
 
-Todo list:
+Todo list (Note these points include Void [WT]):
 -----
 
-* -Challenge-
-* -Mastery-
+* User (login / player) system  
+The user system should be top priority. It is needed to store player information such as levels completed, items collected, research startet and completed, track inventory and more.
 * Progression
 * Tantalise (Story / progression)
-* Micromanagement (Mastery)
-* * Items
-* * Inventory
-* Macromanagement (Progression)
-* * Items
+* Inventory system
+* Event hook system
+* Items ++
+* Level selection and progression system
+* Macromanagement and Progression
 * * Economy / Strategy / Overall objective
-* * Research
+* * Research?
 * * Quests - objectives - tasks
 * * * Collect N collectibles
 * * * Kill all X
@@ -155,22 +154,35 @@ Another way should be to charge the debris somehow and the charge will attract e
 * Damage dealt is given to nearest other player as health / shield
 * Activate to give other player bonus health / regen
 * Siphon - extract 1 mana per second from enemy and deal 1 damage per second while doing so. Movement speed slowed.
-* Fragment - become invurnerable and deal 5 damage + splash when crashing into enemies. Invurnerability wears off after crashing and the enemies become stunned for 3 seconds.
-* Marker - Spawn 10% more and usually tougher enemies
-* VoidPhase - (activated) become etheral. Your body is left behind in a quantum state and your etheral self can move around in a radius around your body. Upon return from the ether unleash (AOE) 5 damage to nearby enemies and stun them.
-* Bullet time - (activated) Enemies and projectiles are paused and will slowly sync back to normal speed.
+* Fragment - (casting, 5s + 30s cd) Become invurnerable and deal 5 damage + splash when crashing into enemies. Invurnerability wears off after crashing and the enemies become stunned for 3 seconds.
+* Marker - (passive) Spawn 10% more and usually tougher enemies.
+* VoidPhase - (activated, 20s cd) become etheral. Your body is left behind in a quantum state and your etheral self can move around in a radius around your body. Upon return from the ether unleash (AOE) 5 damage to nearby enemies and stun them.
+* Bullet time - (activated, cd 20s) Enemies and projectiles are paused and will slowly sync back to normal speed.
 * Greed - (passive) Upon level completion, gain one additional rift token
 * Transistors - (passive) Your electricity capacity is increased by 30.
 * Double strike - (passive) Attacks are performed twice in quick succession.
 * Cloak - (passive) Most enemies can not detect you unless they get very close or they observe you using a revealing ability.
-* Tesla - Deals 20 damage divided equally among enemies in range. Consumes 10 Electricity.
-* Charger - Regenerates 1 electricty every time you deal damage.
-* Enhancer - (passive) Every 5 Minerals collected gives you +1 / +1
-* Inverter - (active) Consume 3 minerals to activate. While activated any recieved damage will deactive this ability and return the damage to the attacking entity.
+* Tesla - (activated, 5s cd) Deals 20 damage divided equally among enemies in range. Consumes 10 Electricity.
+* Charger - (passive_ Regenerates 1 electricty every time you deal damage.
+* Enhancer - (passive) Every 10 Minerals gives you +1 / +1. (non-consuming)
+* Inverter - (casting, 5s) Consume 3 minerals to activate. Once activated any recieved damage will deactive this ability and reflect the damage back to the attacking entity.
+* Soulcapture - (passive) Every 2 enemies that dies give you +1 / 0 until the end of the round or until you die.
+* Soulcage - (passive) At death you enter a static state where you take no damage and after 3 seconds a blast emits from your position stunning nearby enemies dealing 5 damage and the blast destroys any projectiles in the blast radius.
+* To Be Named - All players deal +5 damage to purple enemies.
+* To Be Named - All players deal +5 damage to pink enemies.
+* To Be Named - All players deal +5 damage to blue enemies.
+* To Be Named - All players deal +5 damage to yellow enemies.
+* To Be Named - Yellow enemies are slowed by 10%.
+* To Be Named - Yellow enemies have their cast time increased by 100%.
+* Tracking missile - (casting, 0.5-2s) Consume 1 mineral. Cast a missile that automatically tracks nearby enemies and deals 15 damage.
 
 ## Monster / Enemy ideas
-* Levithan - Huge monster ( half the screen ). Can not be killed, extremely dangerous.
+* Levithan - Huge monster ( half the screen ). Can not be killed and extremely dangerous. (Rare)
+* Ziz - Small monster. Can not be killed and extremely dangerous. (Rare)
 
+## Monster spells / abilities
+* Fireball - 
+* Harden - (activated) 3s cast time. 
 ## Spawners
 Make late level spawns based on actions during play? Doing such and such triggers more spawns?
 
