@@ -272,6 +272,50 @@ vcore.canvas = function() {
 //        * [Redundant:] Non box2d = non entity. Requires own "physics"
 //          (We use box2d because of the AABB selection for rendering & other consistency issues)
 //
+
+(function() {
+  var i, hooks = {}, filters = {};
+  vcore.hook = function(hook, callback) {
+    if (undefined === hooks[hook]) {
+      hooks[hook] = [callback];
+    }
+    else {
+      hooks[hook].push(callback);
+    }
+  };
+  vcore.invoke = function (hook) {
+    var args = arguments;
+    if (undefined !== hooks[hook]) {
+      var callbacks = hooks[hook];
+      callbacks.sort();
+      for (i =0; i < callbacks.length; i++) {
+        callbacks[i](args);
+      }
+    }
+  };
+
+
+  vcore.add_filter = function(filter, callback) {
+    if (undefined === filters[filter]) {
+      filters[filter] = [callback];
+    }
+    else {
+      filters[filter].push(callback);
+    }
+  };
+  vcore.filter = function (filter, value) {
+    var args = arguments;
+    if (undefined !== filters[filter]) {
+      var callbacks = filters[filter];
+      callbacks.sort();
+      for (i =0; i < callbacks.length; i++) {
+        value = callbacks[i](value, args);
+      }
+    }
+    return value;
+  };
+})();
+
 var voidjs = {
   key : {
     left:   false,
