@@ -37,8 +37,8 @@ voidjs.control.player = {};
 voidjs.control.keydown = function(e) {
   voidjs.control.toggle(e.keyCode, true);
 
-  if (!voidjs.control.player['keyboard']) {
-    voidjs.control.player['keyboard'] = {
+  if (!voidjs.control.player.keyboard) {
+    voidjs.control.player.keyboard = {
       eid: 0
     };
   }

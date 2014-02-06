@@ -43,7 +43,7 @@ voidjs.draw = function(player) {
 
   var ship_pos = player.GetPosition();
   var plate = new b2AABB();
-  var area = 9;
+  var area = 14;
   plate.lowerBound = {x: ship_pos.x - area, y: ship_pos.y - area};
   plate.upperBound = {x: ship_pos.x + area, y: ship_pos.y + area};
   var que = {};
