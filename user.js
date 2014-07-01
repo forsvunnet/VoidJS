@@ -29,7 +29,13 @@ voidjs.user.login = function(username, password) {
     });
   }
   else {
-    vcore.invoke('login_internal', credentials);
+    vcore.invoke('login_internal', {
+      name: 'Guest_' . parseInt(Math.random() * 799 + 100, 10),
+      inventory: [],
+      inventory_set: [],
+      resources: [],
+      levels: [],
+    });
   }
 };
 
@@ -44,3 +50,5 @@ voidjs.user.init = function () {
     alert('Please wait while I post a login request to the server...');
   });
 };
+
+vcore.hook('login_internal');

@@ -132,8 +132,8 @@ vcore.aTob2Vec2 = function(definition, data) {
   var b2Vec2 = Box2D.Common.Math.b2Vec2;
   var i, j;
   vertices = [];
-  for (i = 0; i < data['vertices'].length; i++) {
-    var v = data['vertices'][i];
+  for (i = 0; i < data.vertices.length; i++) {
+    var v = data.vertices[i];
     vertices.push(new b2Vec2(v[0], v[1]));
   }
 
@@ -237,6 +237,10 @@ vcore.canvas = function() {
 // Especially important are features that allow for
 // writing game rules and altering game mechanics.
 //
+// 0.  0% - Entity Editor
+//        * An interactive NodeJS / PHP editor capable of parsing and
+//          editing entity objects and scripts of different types.
+//
 // 0. 01% - nodejs
 //        * RPC
 //        * Active entity positions (Non-sleeping)
@@ -264,10 +268,10 @@ vcore.canvas = function() {
 //        * Correlation between level description and modules are quite essential.
 //          Should levels include information about their module dependency?
 //
-// 4. 20% - Sounds
+// 5. 20% - Sounds
 //        * Might have to be refractored. Lacks consistency.
 //
-// 5. 01% - Particles
+// 6. 01% - Particles
 //        * box2d = entity. Ignore everything but walls? - non-essential.
 //        * [Redundant:] Non box2d = non entity. Requires own "physics"
 //          (We use box2d because of the AABB selection for rendering & other consistency issues)
@@ -373,7 +377,7 @@ var voidjs = {
     chapter = chapter || 0;
     voidjs.chapter = chapter;
     // Play loading screen
-    
+
     // @TODO: Make loading screen
 
     // load the level and pass it to the init function
@@ -382,6 +386,12 @@ var voidjs = {
 
   // Initialise the game world
   init_game: function(level) {
+    // Reset controllers
+    var i;
+    for (i in voidjs.controllers) {
+      voidjs.controllers[i].eid = 0;
+    }
+
     // Set up variables
     var chapter = voidjs.chapter || 0;
     voidjs.player.length = 0;

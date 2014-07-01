@@ -54,6 +54,11 @@ voidjs.control.keyup = function(e) {
   voidjs.control.toggle(e.keyCode, false);
 };
 voidjs.control.toggle = function(key, bool) {
+  var k, old_keys = {};
+  for (k in voidjs.key) {
+    old_keys[k] = voidjs.key[k];
+  }
+  if(key)console.log(key);
   switch (key) {
     // Left
     case 65:
@@ -84,6 +89,16 @@ voidjs.control.toggle = function(key, bool) {
     case 32:
       voidjs.key.fire = bool;
     break;
+    // Pause {ESC}
+    case 27:
+      voidjs.key.pause = bool;
+    break;
+  }
+  // Check for changed keys
+  for (k in voidjs.key) {
+    if (old_keys[k] !== voidjs.key[k] && voidjs.key[k]) {
+      vcore.invoke('player_action', 'keyboard', k);
+    }
   }
 };
 voidjs.control.mousedown = function (e) {

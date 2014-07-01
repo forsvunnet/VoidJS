@@ -31,6 +31,10 @@ voidjs.update = function () {
       controller.eid = voidjs.entityCreator.create('player', [cO.x, cO.y], 0 ,0);
     }
     var ship = voidjs.entities[controller.eid];
+    if (!ship) {
+      console.log('Error');
+      return;
+    }
     apply_movement(ship, i);
     voidjs.draw(ship);
     var shipAt = ship.GetPosition();
@@ -373,7 +377,7 @@ voidjs.scripts.item_sword = function (args) {
       var pos = body.GetPosition();
       voidjs.entityCreator.create('particle', [pos, vel]);
     }
-    //if (body.isPlayer) console.log(body);
+
     if (body.isPlayer && body.camera) {
       body.camera.shake(0.2, 250);
       voidjs.audio.play('hurt', 1);

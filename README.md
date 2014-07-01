@@ -32,7 +32,7 @@ VoidJS should include basic game mechanics and leave more advanced mechanics to 
 Todo list (Note these points include Void [WT]):
 -----
 
-* User (login / player) system  
+* User (login / player) system
 The user system should be top priority. It is needed to store player information such as levels completed, items collected, research startet and completed, track inventory and more.
 * Progression
 * Tantalise (Story / progression)
@@ -86,7 +86,7 @@ biomes: {
 ### Generator
 
 #### Improve workflow
-The levels should be overwritten automatically.  
+The levels should be overwritten automatically.
 **Steps to accomplish:**
 
 * Set up a webhost for the generator
@@ -131,7 +131,7 @@ The rewards from PvZ2 are kinda lousy (coins usually), so here Void [WT] can exc
 
 ### Unlockable content
 
-After completing several levels and perhaps a boss fight new content should be unlocked for previous levels. 
+After completing several levels and perhaps a boss fight new content should be unlocked for previous levels.
 
 ## Debris
 Two methods to collect valuables from debris.
@@ -181,8 +181,8 @@ Another way should be to charge the debris somehow and the charge will attract e
 * Ziz - Small monster. Can not be killed and extremely dangerous. (Rare)
 
 ## Monster spells / abilities
-* Fireball - 
-* Harden - (activated) 3s cast time. 
+* Fireball -
+* Harden - (activated) 3s cast time.
 ## Spawners
 Make late level spawns based on actions during play? Doing such and such triggers more spawns?
 
@@ -190,3 +190,15 @@ Make late level spawns based on actions during play? Doing such and such trigger
 Prevent players from backtracking.
 Maybe turn background blocks into solid wall?
 
+
+
+# True enjoyment from a game comes when:
+
+## The player is given an objective and..
+* Is not given instructions on how to complete the objective (beyond hints and directives)
+* There are several routes or options on how to complete the objective without telling the player what the options are.
+* The challenges involved in completing the objective can be achieved in several different ways..
+    * Slow / methodical
+    * Fast and ruthless
+    * Easy / hard
+    * Avoidable
