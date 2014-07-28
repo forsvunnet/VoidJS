@@ -34,7 +34,7 @@ voidjs.entityCreator.init = function () {
   voidjs.entityCreator.style = {};
 
   // Scripts definition
-  voidjs.entityCreator.scripts = 0;
+  voidjs.entityCreator.description = 0;
 
 };
 
@@ -124,16 +124,45 @@ voidjs.entityCreator.build = function(args, id) {
   // Creates a new instance of a script register
   // It's quite complex code so better leave it at that
   entity.scripts = vcore.scripts();
-  var script, i;
-  if (voidjs.entityCreator.scripts) {
-    for (i in voidjs.entityCreator.scripts) {
-      script = voidjs.entityCreator.scripts[i];
+  var _args, script, i;
+  if (voidjs.entityCreator.description.scripts) {
+    for (i in voidjs.entityCreator.description.scripts) {
+      script = voidjs.entityCreator.description.scripts[i];
       entity.scripts.register(script);
     }
   }
-  if (voidjs.entityCreator.after) {
-    voidjs.entityCreator.after(entity, args);
+  if (voidjs.entityCreator.description.after) {
+    voidjs.entityCreator.description.after(entity, args);
   }
+
+
+  if (voidjs.entityCreator.description.active_scripts) {
+    // Attach active scripts to the entity
+    if (voidjs.entityCreator.description.active_scripts) {
+      entity.active_scripts = vcore.scripts();
+      for (i in voidjs.entityCreator.description.active_scripts) {
+        script = voidjs.entityCreator.description.active_scripts[i];
+        if (jQuery.isArray(script)) {
+          if (1 < script.length) {
+            // Build the arguments manually (a splice would decimate the original description because of inheritance)
+            _args = [];
+            for (j = 1; j < script.length; j++) {
+              _args.push(script[j]);
+            }
+            script = script[0];
+            entity.active_scripts.register(script(entity, _args));
+          }
+          else {
+            script = script[0];
+            entity.active_scripts.register(script(entity));
+          }
+        }
+        else {
+          entity.active_scripts.register(script(entity));
+        }
+      }
+    }
+  } // - fi active scripts
   return entity;
 };
 /*// - Chrome code:
@@ -171,15 +200,15 @@ voidjs.entityCreator.prepare = function (type, args) {
       ['rotation', 'body', 0]
     ];
 
-    var data = {}; // A temporary data obj used by the specials
+    var key, data = {}; // A temporary data obj used by the specials
     var special = voidjs.descriptions_special;
 
     // Override defaults with description definitions
     if (description.map !== undefined) {
       map = [];
       for (i =0; i < description.map.length; i++) {
-        var key = description.map[i];
-        var arguments = voidjs.descriptions_map[key];
+        key = description.map[i];
+        var _args = voidjs.descriptions_map[key];
 
         // The key and arguments must be consolidated because
         // right now they look like this:
@@ -188,8 +217,8 @@ voidjs.entityCreator.prepare = function (type, args) {
 
         // Build a packet with keys and arguments
         var packet = [key];
-        for (j = 0; j < arguments.length; j++) {
-          packet.push(arguments[j]);
+        for (j = 0; j < _args.length; j++) {
+          packet.push(_args[j]);
         }
 
         // Place the packet in the map
@@ -203,11 +232,20 @@ voidjs.entityCreator.prepare = function (type, args) {
         break;
       }
     }
+
+    voidjs.entityCreator.description = {
+      scripts: false,
+      after: false,
+      active_scripts: false,
+    };
     //if (description.required !== undefined) { required = description.required; }
     // @TODO: Count required instead
     //if (description.special !== undefined) { special = description.special; }
-    if (description.scripts !== undefined) { voidjs.entityCreator.scripts = description.scripts; }
-    if (description.after !== undefined) { voidjs.entityCreator.after = description.after; }
+    for (var property in voidjs.entityCreator.description) {
+      if (undefined !== description[property]) {
+        voidjs.entityCreator.description[property] = description[property];
+      }
+    }
 
     // Make sure the required amount of arguments have been passed
     if (args.length < required) {
@@ -219,7 +257,7 @@ voidjs.entityCreator.prepare = function (type, args) {
     for (i = 0; i < map.length; i++) {
       // The map is grouped by what type
       var attribute = map[i];
-      var key = attribute[0];
+      key = attribute[0];
       var value;
       if (i < args.length) {
         // In case of an array it means it carries a default.
@@ -248,7 +286,6 @@ voidjs.entityCreator.prepare = function (type, args) {
         // Apply the value to the definition
 
         def[attribute[1]][key] = value;
-        //console.log('def[' + attribute[1] + '][' + key + '] = ' + value);
       }
     }
 
@@ -268,8 +305,7 @@ voidjs.entityCreator.reset = function (description){
     'style' : voidjs.entityCreator.style
   };
 
-  voidjs.entityCreator.scripts = 0;
-  voidjs.entityCreator.after = 0;
+  voidjs.entityCreator.description = 0;
 
   // Fixture defaults
   def['fixture'].density = 1.0;
@@ -294,7 +330,7 @@ voidjs.entityCreator.reset = function (description){
   def['style'].fill = 0;
 
   var i, j, props = ['body', 'fixture', 'style'];
-  
+
   for (i in props){
     var property = props[i];
     if (description && description[property]) {

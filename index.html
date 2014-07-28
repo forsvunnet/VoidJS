@@ -4,20 +4,20 @@
   <title>Void Game</title>
   <style type="text/css">
     body{margin: 0;}
-    #menu {
+    #menu-container {
       position: fixed;
       left: 0; right: 0; top: 0; bottom: 0;
       z-index: 3;
       color: white;
       -webkit-font-smoothing: antialiased;
     }
-    #menu li {
+    #menu-container li {
       cursor: pointer;
     }
-    #menu li:hover {
+    #menu-container li:hover {
       opacity: 0.5;
     }
-    #menu li.selected {
+    #menu-container li.selected {
       color: red;
     }
   </style>
@@ -25,7 +25,102 @@
  <body>
   <div id="fps" style="position: fixed; color: #FFF; left: 10px; top: 10px; font-family: arial;"></div>
   <canvas id="canvas" width="600" height="400" ></canvas>
-  <div id="menu"></div>
+  <div id="menu-container">
+    <!-- Main menu - begin -->
+    <div class="menu" id="main-menu">
+      <ul>
+        <li data-action="continue_play">
+          <p>Continue</p>
+          <p class="continue-block">
+            <span class="on-book">{{book}}</span><br>
+            <span class="on-chapter">{{chapter}}</span><br>
+            <span class="on-section">{{section}}</span>
+          </p>
+        </li>
+        <li data-action="select_level"><p>Select level</p></li>
+        <li data-action="join_server"><p>Join server</p></li>
+        <li data-action="game_settings"><p>Settings</p></li>
+      </ul>
+    </div>
+    <!-- Main menu - end -->
+
+    <!-- Level selection - begin -->
+    <div class="menu" id="level-select">
+      <p class="back" data-action="main_menu">Back to main menu</p>
+      <div class="select-book">
+        <p class="menu-title">Book</p>
+        <ul>{{book}}</ul>
+      </div>
+      <div class="select-chapter">
+        <p class="menu-title">Chapter</p>
+        <ul>{{chapter}}</ul>
+      </div>
+      <div class="select-section">
+        <p class="menu-title">Section</p>
+        <ul>{{section}}</ul>
+      </div>
+    </div>
+    <!-- Level selection - end -->
+
+    <!-- Game settings - begin -->
+    <div class="menu" id="game-settings">
+      <p class="back" data-action="main_menu">Back to main menu</p>
+      <div class="controls">
+        <p class="menu-title">Controller settings</p>
+        <ul class="settings-group">
+          <li>
+            <label for="controller-1" class="settings-label">Keyboard</label>
+            <select id="controller-1" class="settings-value">
+              <option>Inactive</option>
+            </select>
+          </li>
+          <li>
+            <label for="controller-2" class="settings-label">Gamepad #1</label>
+            <select id="controller-2" class="settings-value">
+              <option>Disconnected</option>
+            </select>
+          </li>
+          <li>
+            <label for="controller-3" class="settings-label">Gamepad #2</label>
+            <select id="controller-3" class="settings-value">
+              <option>Disconnected</option>
+            </select>
+          </li>
+          <li>
+            <label for="controller-4" class="settings-label">Gamepad #3</label>
+            <select id="controller-4" class="settings-value">
+              <option>Disconnected</option>
+            </select>
+          </li>
+          <li>
+            <label for="controller-5" class="settings-label">Gamepad #4</label>
+            <select id="controller-5" class="settings-value">
+              <option>Disconnected</option>
+            </select>
+          </li>
+        </ul>
+      </div>
+      <div class="audio-settings">
+        <p class="menu-title">Audio / SFX settings</p>
+        <ul class="settings-group">
+          <li>
+            <label for="master-volume">Volume</label>
+            <input type="number" value="100" min="0" max="100" id="master-volume">
+          </li>
+        </ul>
+      </div>
+      <div class="video-settings">
+        <p class="menu-title">Video settings</p>
+        <ul class="settings-group">
+          <li>
+            <label for="vfx-details">Detail level</label>
+            <input type="number" value="100" min="0" max="100" id="vfx-details">
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- Game settings - end -->
+  </div>
  </body>
  <script type="text/javascript" src="jquery-2.0.3.min.js"></script>
  <script type="text/javascript" src="Box2dWeb-2.1a.3/Box2dWeb-2.1.a.3.js"></script>

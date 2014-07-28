@@ -20,6 +20,9 @@ voidjs.menu = {};
     chapter = chapter+1<voidjs.levels.length ? chapter+1 : 0;
     voidjs.goto('game', chapter);
   };
+  var select_level = function() {
+    voidjs.menu.show('SelectLevel');
+  };
   var inventory = function() {
     alert('accessing inventory');
     voidjs.menu.show('main');
@@ -35,20 +38,30 @@ voidjs.menu = {};
     $('<ul>').append(
       $('<li>')
         .m_click(next_level)
-        .text('Next level'),
+        .text('Next level')
+    )
+  );
+  m.level_select = $('<div>').hide().append(
+    $('<ul>').append(
       $('<li>')
-        .m_click(inventory)
-        .text('Inventory')
+        .m_click(next_level)
+        .text('Level 1'),
+      $('<li>')
+        .m_click(next_level)
+        .text('Level 2')
     )
   );
   m.main = $('<div>').hide().append(
     $('<ul>').append(
       $('<li>')
         .m_click(next_level)
-        .text('Play'),
+        .text('Continue'),
       $('<li>')
-        .m_click(inventory)
-        .text('Inventory')
+        .m_click(select_level)
+        .text('Select level'),
+      $('<li>')
+        .m_click(select_level)
+        .text('Player settings')
     )
   );
   m.pause = $('<div>').hide().append(
@@ -75,6 +88,9 @@ voidjs.menu = {};
       case 'LevelComplete':
         m.complete.show();
         break;
+      case 'SelectLevel':
+        m.level_select.show();
+        break;
       case 'Pause':
         m.pause.show();
         break;
@@ -82,7 +98,7 @@ voidjs.menu = {};
       break;
 
       default:
-        m.main.show();
+        $('#main-menu').show();
         break;
     }
 
@@ -92,12 +108,7 @@ voidjs.menu = {};
 
     vcore.invoke('menu_show', part);
   }; // - show menu
-  menu.hide = function(part) {
-    for (var x in m) {
-      m[x].hide();
-    }
-    vcore.invoke('menu_hide', part);
-  }; // - show menu
+  menu.hide = $('.menu').hide;
 
   menu.next = function() {
     if (!$('li.selected:visible').length) {
@@ -126,27 +137,27 @@ voidjs.menu = {};
     vcore.invoke('menu_select');
   };
 
-})(voidjs.menu);
+} )( voidjs.menu );
 
 
 // Implement a hook to move around the menu with controllers
-vcore.hook('player_action', function(args) {
+vcore.hook( 'player_action', function(args) {
   var key = args[2];
-  if (!voidjs.world) {
+  if ( !voidjs.world ) {
     // @TODO: Each controller gets own pause menu
-    if ('fire' == key || 'select' == key) {
+    if ( 'fire' == key || 'select' == key ) {
       voidjs.menu.select();
     }
-    else if ('up' == key || 'left' == key) {
+    else if ( 'up' == key || 'left' == key ) {
       voidjs.menu.prev();
     }
-    else if ('down' == key || 'right' == key) {
+    else if ( 'down' == key || 'right' == key ) {
       voidjs.menu.next();
     }
   }
   else {
-    if ('pause' == key) {
-      voidjs.menu.show('Pause');
+    if ( 'pause' == key ) {
+      voidjs.menu.show( 'Pause' );
     }
   }
-});
+} );

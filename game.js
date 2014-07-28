@@ -311,7 +311,9 @@ voidjs.scripts.life = function (self) {
     }
   };
 };
-voidjs.scripts.decay = function (self, rate) {
+voidjs.scripts.decay = function (self, args) {
+  if (!args) { debugger; }
+  var rate = args[0];
   return function () {
     self.life -= rate;
   };
@@ -349,6 +351,19 @@ voidjs.scripts.regen = function (self, rate) {
         self.life = max;
       }
     }
+  };
+};
+voidjs.scripts.cooldown = function (self) {
+  return function() {
+    if (self.cd > 0) {
+      self.cd -= voidjs.fps;
+    }
+  };
+};
+voidjs.scripts.test = function (self, args) {
+  console.log(args);
+  debugger;
+  return function () {
   };
 };
 

@@ -7,7 +7,7 @@ voidjs.descriptions_map = {
   'height': ['fixture', 0.3],
   'mode': ['after', 0],
   'cd': ['after', 500],
-  'fill': ['style', "#FF0000"],
+  // 'fill': ['style', "#FF0000"],
   'decay': ['after', [50,100]],
   'size': ['after', 0.75],
   'p1': ['body'],
@@ -18,7 +18,7 @@ voidjs.descriptions_map = {
   'velocity': ['body'],
   'fill': ['style', c[4]],
   'linearDamping': ['body', 2],
-}
+};
 
 voidjs.descriptions_special = {
   'x' : 0,
@@ -89,6 +89,10 @@ voidjs.descriptions.player = {
     stroke: false,
     layer: 10
   },
+  active_scripts: [
+    voidjs.scripts.life,
+    voidjs.scripts.regen
+  ],
   after: function(entity) {
     entity.checkpoint = false;
     entity.isPlayer = true;
@@ -99,9 +103,6 @@ voidjs.descriptions.player = {
     entity.team = 1;
     entity.life = 10;
     entity.max_life = 10;
-    entity.active_scripts = vcore.scripts();
-    entity.active_scripts.register(voidjs.scripts.life(entity));
-    entity.active_scripts.register(voidjs.scripts.regen(entity));
     entity.m_fixtureList.m_shape.SetAsBox(0.15, 0.15);
     entity.kill = function() {
       entity.SetActive(false);
@@ -139,6 +140,9 @@ voidjs.descriptions.player = {
 voidjs.descriptions.sentry = {
   map : ['x', 'y', 'mode'],
   scripts: [ voidjs.scripts.sentry ],
+  active_scripts: [
+    voidjs.scripts.life,
+  ],
   style: {
     fill: c[4],
     stroke: false,
@@ -147,10 +151,8 @@ voidjs.descriptions.sentry = {
   },
   body: {type: Box2D.Dynamics.b2Body.b2_staticBody},
   after: function(entity, args) {
-    entity.active_scripts = vcore.scripts();
     entity.life = 10;
     entity.max_life = entity.life;
-    entity.active_scripts.register(voidjs.scripts.life(entity));
     entity.kill = function() {
       entity.SetActive(false);
       var amount = 10;
@@ -190,10 +192,6 @@ voidjs.descriptions.sentry = {
   }
 };
 
-
-// This is a phantom entity
-// I'm not even sure this should be an entity?
-// Maybe we can do crazy stuff with this as an entity later?
 voidjs.descriptions.player_sword = {
   map : ['cd', 'fill', 'decay', 'size'],
   style: {
@@ -208,6 +206,12 @@ voidjs.descriptions.player_sword = {
   },
   scripts: [voidjs.scripts.item_sword],
   fixture: { isSensor: true },
+  active_scripts: [
+    [voidjs.scripts.decay, voidjs.fps],
+    voidjs.scripts.cooldown,
+    voidjs.scripts.life,
+    voidjs.scripts.fade
+  ],
   after: function(entity, args) {
     entity.m_fixtureList.m_shape.SetAsBox(args[3], args[3]);
     entity.angularVelocity = (Math.random() * 15 + 5) * (Math.random() > 0.5 ? -1 : 1);
@@ -216,23 +220,12 @@ voidjs.descriptions.player_sword = {
     entity.damage = 500;
     entity.team = 1;
     entity.max_life = 250;//entity.life;
-    entity.active_scripts = vcore.scripts();
-    entity.active_scripts.register(voidjs.scripts.decay(entity, voidjs.fps));
-    entity.active_scripts.register(voidjs.scripts.life(entity));
     entity.cd = args[0];
     entity.m_mass = 0;
-    //console.log(args);
-    entity.active_scripts.register(function() {
-      //entity.SetPosition(voidjs.player.GetPosition());
-      if (entity.cd > 0) {
-        entity.cd -= voidjs.fps;
-      }
-    });
-    //var b2WeldJoint = Box2D.Dynamics.Joints.b2WeldJoint;
+
     var b2WeldJointDef = Box2D.Dynamics.Joints.b2WeldJointDef;
     var joint = new b2WeldJointDef();
 
-    entity.active_scripts.register(voidjs.scripts.fade(entity));
     entity.SetActive(false);
     entity.kill = function() {
       if (entity.IsActive()) {
@@ -253,6 +246,12 @@ voidjs.descriptions.player_shield = {
     angularDamping: 0
   },
   scripts: [voidjs.scripts.item_shield],
+  active_scripts: [
+    [voidjs.scripts.decay, voidjs.fps],
+    voidjs.scripts.life,
+    voidjs.scripts.fade,
+    voidjs.scripts.cooldown
+  ],
   fixture: { isSensor: true },
   after: function(entity, args) {
     entity.m_fixtureList.m_shape.SetAsBox(args[3], args[3]);
@@ -261,17 +260,8 @@ voidjs.descriptions.player_shield = {
     entity.damage = 500;
     entity.team = 1;
     entity.max_life = 250;//entity.life;
-    entity.active_scripts = vcore.scripts();
-    entity.active_scripts.register(voidjs.scripts.decay(entity, voidjs.fps));
-    entity.active_scripts.register(voidjs.scripts.life(entity));
     entity.cd = args[0];
 
-    entity.active_scripts.register(function() {
-      if (entity.cd > 0) {
-        entity.cd -= voidjs.fps;
-      }
-    });
-    entity.active_scripts.register(voidjs.scripts.fade(entity));
     entity.kill = function() {
       if (entity.IsActive()) {
         entity.SetActive(false);
@@ -335,18 +325,20 @@ voidjs.descriptions.particle = {
     angularDamping: 0
   },
   fixture: { isSensor: true },
+  active_scripts: [
+    [voidjs.scripts.decay, voidjs.fps],
+    voidjs.scripts.life,
+    voidjs.scripts.fade
+  ],
   after: function(entity, args) {
     entity.m_fixtureList.m_shape.SetAsBox(args[5], args[5]);
     entity.angularVelocity = (Math.random() * 15 + 5) * (Math.random() > 0.5 ? -1 : 1);
     entity.life = Math.random() * (args[4][1] - args[4][0]) + args[4][0];
     entity.max_life = entity.life;
-    entity.active_scripts = vcore.scripts();
-    entity.active_scripts.register(voidjs.scripts.decay(entity, voidjs.fps));
-    entity.active_scripts.register(voidjs.scripts.life(entity));
 
     // @TODO: BUG @BUG: style.fill should already be filled in
     entity.style.fill = args[2];
-    entity.active_scripts.register(voidjs.scripts.fade(entity));
+
     entity.kill = function() {
       voidjs.world.RemoveBody(entity);
     };
@@ -360,6 +352,7 @@ voidjs.descriptions.checkpoint = {
   ],
   style: {layer: 1, fill: c[5]}
 };
+
 voidjs.descriptions.end = {
   fixture: {isSensor: true},
   scripts: [

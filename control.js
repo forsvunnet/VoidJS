@@ -58,7 +58,7 @@ voidjs.control.toggle = function(key, bool) {
   for (k in voidjs.key) {
     old_keys[k] = voidjs.key[k];
   }
-  if(key)console.log(key);
+  // if(key)console.log(key);
   switch (key) {
     // Left
     case 65:
