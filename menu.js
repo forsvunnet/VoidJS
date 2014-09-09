@@ -33,7 +33,7 @@ voidjs.menu = {};
   // #2 : Sound options
   // #3 : Control options
   // #4 : Progression status
-  // #5 : Game settings??
+  // #5 : Game game_settings??
   /*
   m.complete = $('<div>').hide().append(
     $('<ul>').append(
@@ -86,10 +86,10 @@ voidjs.menu = {};
 
 
   menu.next = function() {
-    if (!$('li.selected:visible').length) {
-      $('li:visible:eq(0)').addClass('selected');
+    if (!$('a.selected:visible').length) {
+      $('a:visible:eq(0)').addClass('selected');
     } else {
-      $('li.selected')
+      $('a.selected')
         .removeClass('selected')
         .next()
         .addClass('selected');
@@ -97,10 +97,10 @@ voidjs.menu = {};
     }
   };
   menu.prev = function() {
-    if (!$('li.selected:visible').length) {
-      $('li:visible:eq(0)').addClass('selected');
+    if (!$('a.selected:visible').length) {
+      $('a:visible:eq(0)').addClass('selected');
     } else {
-      $('li.selected')
+      $('a.selected')
         .removeClass('selected')
         .prev()
         .addClass('selected');
@@ -108,7 +108,7 @@ voidjs.menu = {};
     }
   };
   menu.select = function() {
-    $('li.selected').click();
+    $('a.selected').click();
     vcore.invoke('menu_select');
   };
 
@@ -123,6 +123,7 @@ voidjs.menu = {};
   var chapter1 = $('<li>');
   var section1 = $('<li>');
 
+  //
   var variables = {
     on: {
       book: $('<span>').text('Book 1: The first book'),
@@ -137,10 +138,13 @@ voidjs.menu = {};
   };
 
   menu.hide = function() { container.hide(); };
+
+  // A cheecky way to interact with the {{placeholders}} in the html
   container.html( function( index, oldHtml ) {
     return oldHtml.replace( /{{/g, '<span class="placeholder">').replace( /}}/g, '</span>')
   } );
 
+  // The spans are now ready to be replaced with real things
   $( '.placeholder', container ).replaceWith( function() {
     var parts = $(this).text().split(':');
     return variables[parts[0]][parts[1]];
@@ -150,6 +154,7 @@ voidjs.menu = {};
     main: $('#main-menu'),
     level_complete: $('#level-complete'),
     level_select: $('#level-select'),
+    game_settings: $('#game-settings'),
     pause: $('#pause'),
   };
 
@@ -159,19 +164,22 @@ voidjs.menu = {};
     var elements = [];
     var active_menu = false;
     switch (part) {
-      case 'LevelComplete':
+      case 'level_complete':
         active_menu = catalog.level_complete;
         break;
-      case 'SelectLevel':
+      case 'level_select':
         active_menu = catalog.level_select;
         break;
-      case 'Pause':
+      case 'pause':
         active_menu = catalog.pause;
         break;
-      case 'Other':
+      case 'game_settings':
+        active_menu = catalog.game_settings;
+        break;
+      case 'other':
       break;
 
-      case 'Main':
+      case 'main_menu':
       default:
         active_menu = catalog.main;
         break;
@@ -181,19 +189,27 @@ voidjs.menu = {};
       active_menu.show();
     }
 
-    if (!$('li.selected:visible').length) {
-      $('li:visible:eq(0)').addClass('selected');
+    if (!$('a.selected:visible').length) {
+      $('a:visible:eq(0)').addClass('selected');
     }
 
     vcore.invoke('menu_show', part);
   }; // - show menu
 
 
-  $('[data-action="continue_play"] a').m_click(
-    function() {
-      voidjs.goto('game', 1);
-    });
-  $('[data-action="select_level"] a').m_click( menu.hide );
+  $('[data-action="continue_play"]').m_click( function() {
+    voidjs.goto('game', 1);
+  } );
+  $('[data-action="select_level"]').m_click( function() {
+    voidjs.goto('menu', 'level_select')
+  } );
+  $('[data-action="join_server"]').addClass('disabled');
+  $('[data-action="main_menu"]').m_click( function() {
+    voidjs.goto('menu', 'main_menu')
+  } );
+  $('[data-action="game_settings"]').m_click( function() {
+    voidjs.goto('menu', 'game_settings')
+  } );
 } ( voidjs.menu ) );
 
 // Implement a hook to move around the menu with controllers
