@@ -5,20 +5,25 @@
   <style type="text/css">
     body{margin: 0;}
     #menu-container {
+      display: none;
       position: fixed;
       left: 0; right: 0; top: 0; bottom: 0;
       z-index: 3;
-      color: white;
+      color: #666;
+      background: #EFEFEF;
       -webkit-font-smoothing: antialiased;
     }
-    #menu-container li {
+    a {
       cursor: pointer;
     }
-    #menu-container li:hover {
-      opacity: 0.5;
+    a:hover {
+      color: black;
     }
-    #menu-container li.selected {
+    .selected a {
       color: red;
+    }
+    .selected a:hover {
+      color: #600;
     }
   </style>
  </head>
@@ -30,43 +35,79 @@
     <div class="menu" id="main-menu">
       <ul>
         <li data-action="continue_play">
-          <p>Continue</p>
-          <p class="continue-block">
-            <span class="on-book">{{book}}</span><br>
-            <span class="on-chapter">{{chapter}}</span><br>
-            <span class="on-section">{{section}}</span>
-          </p>
+          <a class="continue-block">
+            <span class="text">Continue</span>
+            <span class="on-book">{{on:book}}</span><br>
+            <span class="on-chapter">{{on:chapter}}</span><br>
+            <span class="on-section">{{on:section}}</span>
+          </a>
         </li>
-        <li data-action="select_level"><p>Select level</p></li>
-        <li data-action="join_server"><p>Join server</p></li>
-        <li data-action="game_settings"><p>Settings</p></li>
+        <li data-action="select_level"><a>Select level</a></li>
+        <li data-action="join_server"><a>Join server</a></li>
+        <li data-action="game_settings"><a>Settings</a></li>
       </ul>
     </div>
     <!-- Main menu - end -->
 
     <!-- Level selection - begin -->
     <div class="menu" id="level-select">
-      <p class="back" data-action="main_menu">Back to main menu</p>
+      <a class="back" data-action="main_menu">Back to main menu</a>
       <div class="select-book">
-        <p class="menu-title">Book</p>
-        <ul>{{book}}</ul>
+        <a class="menu-title">Book</a>
+        {{list:book}}
       </div>
       <div class="select-chapter">
-        <p class="menu-title">Chapter</p>
-        <ul>{{chapter}}</ul>
+        <a class="menu-title">Chapter</a>
+        {{list:chapter}}
       </div>
       <div class="select-section">
-        <p class="menu-title">Section</p>
-        <ul>{{section}}</ul>
+        <a class="menu-title">Section</a>
+        {{list:section}}
       </div>
     </div>
     <!-- Level selection - end -->
 
+    <!-- Level complete - begin -->
+    <div class="menu" id="level-complete">
+      <a class="back" data-action="main_menu">Back to main menu</a>
+      <div class="select-book">
+        <a class="menu-title">Book</a>
+        {{list:book}}
+      </div>
+      <div class="select-chapter">
+        <a class="menu-title">Chapter</a>
+        {{list:chapter}}
+      </div>
+      <div class="select-section">
+        <a class="menu-title">Section</a>
+        {{list:section}}
+      </div>
+    </div>
+    <!-- Level complete - end -->
+
+    <!-- Pause menu - begin -->
+    <div class="menu" id="pause">
+      <a class="back" data-action="main_menu">Back to main menu</a>
+      <div class="select-book">
+        <a class="menu-title">Book</a>
+        {{list:book}}
+      </div>
+      <div class="select-chapter">
+        <a class="menu-title">Chapter</a>
+        {{list:chapter}}
+      </div>
+      <div class="select-section">
+        <a class="menu-title">Section</a>
+        {{list:section}}
+      </div>
+    </div>
+    <!-- Pause menu - end -->
+
     <!-- Game settings - begin -->
     <div class="menu" id="game-settings">
-      <p class="back" data-action="main_menu">Back to main menu</p>
+      <a class="back" data-action="main_menu">Back to main menu</a>
       <div class="controls">
-        <p class="menu-title">Controller settings</p>
+        <a class="menu-title">Controller settings</a>
         <ul class="settings-group">
           <li>
             <label for="controller-1" class="settings-label">Keyboard</label>
@@ -101,7 +142,7 @@
         </ul>
       </div>
       <div class="audio-settings">
-        <p class="menu-title">Audio / SFX settings</p>
+        <a class="menu-title">Audio / SFX settings</a>
         <ul class="settings-group">
           <li>
             <label for="master-volume">Volume</label>
@@ -110,7 +151,7 @@
         </ul>
       </div>
       <div class="video-settings">
-        <p class="menu-title">Video settings</p>
+        <a class="menu-title">Video settings</a>
         <ul class="settings-group">
           <li>
             <label for="vfx-details">Detail level</label>
