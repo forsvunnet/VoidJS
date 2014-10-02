@@ -84,27 +84,33 @@ voidjs.menu = {};
   }
   */
 
-
+  var menu_items_visible = function() {
+    return !$( this ).hasClass( 'disabled' ) && $( this ).is( ':visible' );
+  };
+  // Itterate $amount over the visible menu items
+  var menu_items_itterate = function( amount ) {
+    var items = $('a,label').filter( menu_items_visible );
+    var current = items.filter( '.selected' );
+    var next = ( items.index( current ) + amount ) % items.length;
+    items.removeClass( 'selected' )
+         .eq( next )
+         .addClass( 'selected' );
+    return items;
+  }
   menu.next = function() {
-    if (!$('a.selected:visible').length) {
-      $('a:visible:eq(0)').addClass('selected');
+    if (!$( '.selected' ).filter( menu_items_visible ).length) {
+      $( 'a,label' ).filter( menu_items_visible ).eq( 0 ).addClass('selected');
     } else {
-      $('a.selected')
-        .removeClass('selected')
-        .next()
-        .addClass('selected');
-      vcore.invoke('menu_next');
+      var items = menu_items_itterate( 1 );
+      vcore.invoke( 'menu_next', items );
     }
   };
   menu.prev = function() {
-    if (!$('a.selected:visible').length) {
-      $('a:visible:eq(0)').addClass('selected');
+    if (!$( '.selected' ).filter( menu_items_visible ).length) {
+      $( 'a,label' ).filter( menu_items_visible ).eq( 0 ).addClass('selected');
     } else {
-      $('a.selected')
-        .removeClass('selected')
-        .prev()
-        .addClass('selected');
-      vcore.invoke('menu_prev');
+      var items = menu_items_itterate( -1 );
+      vcore.invoke('menu_prev', items);
     }
   };
   menu.select = function() {
@@ -189,8 +195,8 @@ voidjs.menu = {};
       active_menu.show();
     }
 
-    if (!$('a.selected:visible').length) {
-      $('a:visible:eq(0)').addClass('selected');
+    if (!$('.selected').filter( menu_items_visible ).length) {
+      $('a,label').filter( menu_items_visible ).eq( 0 ).addClass('selected');
     }
 
     vcore.invoke('menu_show', part);

@@ -318,6 +318,12 @@ vcore.canvas = function() {
     }
     return value;
   };
+  vcore.spawner = function( entity_type ) {
+    return function() {
+      var args = arguments;
+      console.log( 'Spawning '+ entity_type +' at x: , y:' );
+    }
+  };
 })();
 
 var voidjs = {
