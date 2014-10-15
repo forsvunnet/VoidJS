@@ -8,10 +8,10 @@ voidjs.audio = {
     voidjs.audio[name][version].play();
   },
   hurt: [
-    new Audio('audio/hurt.wav'),
-    new Audio('audio/small_hurt.wav')
+    new Audio('core/assets/hurt.wav'),
+    new Audio('core/assets/small_hurt.wav')
   ],
   collect: [
-    new Audio('audio/collect.wav')
+    new Audio('core/assets/collect.wav')
   ]
 };

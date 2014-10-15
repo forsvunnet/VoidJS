@@ -322,7 +322,7 @@ vcore.canvas = function() {
     return function() {
       var args = arguments;
       console.log( 'Spawning '+ entity_type +' at x: , y:' );
-    }
+    };
   };
 })();
 

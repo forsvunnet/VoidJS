@@ -173,27 +173,24 @@
     <!-- Game settings - end -->
   </div>
  </body>
- <script type="text/javascript" src="jquery-2.0.3.min.js"></script>
- <script type="text/javascript" src="Box2dWeb-2.1a.3/Box2dWeb-2.1.a.3.js"></script>
- <script type="text/javascript" src="modernizr.js"></script>
+ <script type="text/javascript" src="core/includes/jquery-2.0.3.min.js"></script>
+ <script type="text/javascript" src="core/includes/gamepad.min.js"></script>
+ <script type="text/javascript" src="core/includes/Box2dWeb-2.1.a.3.min.js"></script>
+ <script type="text/javascript" src="core/includes/modernizr.js"></script>
  <script type="text/javascript">
   var scripts = [
-    'init.js',
-    'abc.js',
-    'shapes.js',
-    'audio.js',
-    'draw.js',
-    'menu.js',
-    'contact.js',
-    'particles.js',
-    'control.js',
-    'game.js',
-    'modules/default.items.js',
-    'modules/default.descriptions.js',
-    'entityCreator.js',
-    'levels.js',
-    'gamepad.min.js'
-    //'client.js'
+    'core/init.js',
+    'core/audio.js',
+    'core/draw.js',
+    'core/menu.js',
+    'core/contact.js',
+    'core/particles.js',
+    'core/control.js',
+    'core/game.js',
+    'core/modules/default.items.js',
+    'core/modules/default.descriptions.js',
+    'core/entity-creator.js',
+    // 'core/levels.js',
   ];
   voidjs = {};
   Modernizr.load({
