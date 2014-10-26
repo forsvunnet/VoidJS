@@ -349,6 +349,7 @@ var voidjs = {
   entity_type_tracker: {},
   descriptions: {},
   scripts: {},
+  modules: {},
   // Prefabs are open by design. they are meant to be edited and modified by users
   // Want to make walls bouncy and deadly? Do it in prefabs..
   prefabs: {},

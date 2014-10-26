@@ -1,4 +1,8 @@
 // @TODO:
+
+// SLOT SYSTEM !!!
+
+
 // Implement a key listening system.
 // eg. a listening function in update should call
 // if (voids.key.#.check()) {} to see if a key has been pressed

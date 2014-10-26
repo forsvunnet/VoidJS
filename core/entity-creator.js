@@ -68,8 +68,9 @@ voidjs.entityCreator.create = function(type, args, id, delay) {
   if (!voidjs.world.IsLocked() && !delay) {
     voidjs.entityCreator.prepare(type, args);
     var entity = voidjs.entityCreator.build(args, id);
+    vcore.invoke( 'spawn-'+ type, entity );
+    voidjs.entities[entity.id] = entity;
     id = entity.id;
-    voidjs.entities[id] = entity;
   } else {
     id = voidjs.entityCreator.id();
     voidjs.entityCreator.late.push([type, args, id]);
