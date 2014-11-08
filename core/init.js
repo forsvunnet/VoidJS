@@ -70,7 +70,7 @@ vcore.scripts = function() {
 };
 
 // QueryAAB
-vcore.q = function (pos, size, callback) {
+vcore.q = function( pos, size, callback ) {
   var b2AABB = Box2D.Collision.b2AABB;
   var plate = new b2AABB();
   plate.lowerBound = {x: pos.x - size, y: pos.y - size};

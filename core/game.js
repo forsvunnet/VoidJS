@@ -108,8 +108,12 @@ var apply_movement = function(ship, device) {
 
 /**
  * Player respawner
+ * This function respawns the player at the last checkpoint
+ * @progress 95%
+ * @param object self The player entity
+ * @return undefined
  */
-voidjs.scripts.spawner = function (self) {
+voidjs.scripts.spawner = function( self ) {
   var b2Vec2 = Box2D.Common.Math.b2Vec2;
   // If player dies:
     // Wait x seconds
@@ -125,18 +129,6 @@ voidjs.scripts.spawner = function (self) {
       var pos = ship.checkpoint || {x:7, y:7};
       //debugger;
       ship.SetPosition( pos );
-
-      for (var i in ship.inventory) {
-        var item = ship.inventory[i];
-        if (typeof item === 'object') {
-          if (item.entity_id) {
-            var item_entity = voidjs.entities[item.entity_id];
-            item_entity.SetPosition(pos);
-            item_entity.SetLinearVelocity(new b2Vec2(0,0));
-            item_entity.SetAngularVelocity(0);
-          }
-        }
-      }
       ship.SetLinearVelocity(new b2Vec2(0,0));
       ship.SetAngularVelocity(0);
       ship.SetActive(true);
@@ -151,14 +143,23 @@ voidjs.scripts.spawner = function (self) {
 
 /**
  * Checkpoint code
+ * A zone checkpoint function.
+ * Updates the checkpoint for all players if a player comes in contact with it.
+ * @progress 95%
+ * @param array args An array with the following contents [body, sensor]
+ * @return undefined
  */
-voidjs.scripts.checkpoint = function(args){
+voidjs.scripts.checkpoint = function( args ) {
   var body = args[0];
   var sensor = args[1];
-  if (body.isPlayer) {
-    for (var i = 0; i < voidjs.player.length; i ++) {
+  // Check for player
+  if ( body.isPlayer ) {
+    // Loop through all players
+    for ( var i = 0; i < voidjs.player.length; i++ ) {
       var player = voidjs.player[i];
-      if (player.hasOwnProperty('checkpoint')) {
+      // Make sure the player has the checkpoint property
+      if ( player.hasOwnProperty( 'checkpoint' ) ) {
+        // Set the checkpoint
         player.checkpoint = sensor.GetPosition();
       }
     }
@@ -167,20 +168,31 @@ voidjs.scripts.checkpoint = function(args){
 
 /**
  * Finish line
+ * A zone function for completing the level
+ * Consider refacoring the "complete level" code into its own function.
+ * @progress 20%
+ * @param array args An array with the following contents [body, sensor]
+ * @return undefined
  */
-voidjs.scripts.finish = function(args){
+voidjs.scripts.finish = function( args ) {
   var body = args[0];
   var sensor = args[1];
   if (body.isPlayer) {
-    window.clearInterval(voidjs.ticker);
-    voidjs.goto('menu', 'LevelComplete');
+    window.clearInterval( voidjs.ticker );
+    voidjs.goto( 'menu', 'LevelComplete' );
   }
 };
 
 /**
- * Collectible self-destruct
+ * Collectible collect script
+ * This function removes the collectible from the world when collected and plays a sound and adds a particle effect.
+ * The particle effect should be refactored into its own function.
+ * The sound system should be looked at.
+ * @progress 70%
+ * @param array args An array with the following contents [body, sensor]
+ * @return undefined
  */
-voidjs.scripts.collectible = function(args){
+voidjs.scripts.collectible = function( args ){
   var body = args[0];
   var sensor = args[1];
   if (body.isPlayer) {
@@ -195,53 +207,71 @@ voidjs.scripts.collectible = function(args){
         voidjs.entityCreator.create('particle', [pos, vel, '#FFFFFF', 2, [1000, 2000], 0.1]);
       }
       voidjs.audio.play('collect');
+      vcore.invoke( 'collect', sensor, body );
     voidjs.world.RemoveBody(sensor);
   }
 };
-//once = true;
-voidjs.scripts.sentry = function (args) {
+
+
+/**
+ * Sentry target aqusition script
+ * During the update sequence the game does an AABB query around
+ * the player looking for AI's. AI's will have their scripts (this) executed.
+ * I think "this" will be the sentry entity, but if not then it can be passed as an arg
+ * Players are centrally registrered so getting the closest one is just a matter of maths
+ * It might be interesting to use a "team" system though. (AI's fighting each other + you)
+ * This code should be made common for most npc's
+ * @progress 70%
+ * @param array args An array with the following contents [sentry]
+ * @return boolean ???
+ */
+voidjs.scripts.sentry = function ( args ) {
   var self = args[0];
-  // # Activation
-  // During the update sequence the game does an AABB query around
-  // the player looking for AI's. AI's will have their script (this) executed.
-  // I think "this" will be the sentry entity, but if not then it can be passed as an arg
-  // Players are centrally registrered so getting the closest one is just a matter of maths
-  // It might be interesting to use a "team" system though. (AI's fighting each other + you)
-  if (!self.target) {
-    //if (once) {console.log(self); once = false;}
-    var pos = self.GetPosition();
-    var activation = function(fixture){
+  if ( !self.target ) {
+    // Callback for the AABB query
+    var activation = function( fixture ) {
       var entity = fixture.m_body;
-      if (entity.team !== undefined && entity.team != self.team) {
-        //console.log(len + );
-        var len = vcore.len(self, entity);
-        if (len < self.target_range) {
-          // Target within range
+      // Make sure the target entity belongs to a team and is not friendly
+      if ( entity.team !== undefined && entity.team != self.team ) {
+        // Engage the target if it's within range
+        var len = vcore.len( self, entity );
+        if ( len < self.target_range ) {
+          // Set the entity as the sentrys target
           self.target = entity.id;
-          // Activate:
-          self.active_scripts.register(voidjs.scripts.sentry_tracking(self));
-          return true;
+          // Activate the sentry
+          self.active_scripts.register( voidjs.scripts.sentry_tracking( self ) );
         }
       }
+
+      // AABB function should return true for some reason???
       return true;
     };
-    vcore.q(pos, 5, activation);
+
+    // Query the world in a radius of 5 around the sentry
+    vcore.q( self.GetPosition(), 5, activation );
   }
     //self.aggro[entity.id] = vcore.len(self, entity);
 };
 
-voidjs.scripts.sentry_tracking = function (self) {
+/**
+ * Sentry AI tracking script
+ * # Aggro system:
+ * Initially the Sentry will query (AABB) the area around itself looking
+ * for oposing team entities. It will target the closest one by creating an
+ * aggro table ([array]) with entity id's (closer being more aggressive)
+ * The sentry will per loop continually target the highest aggro entity
+ * The aggro system needs work.
+ * The code needs review and commenting.
+ * @progress 50%
+ * @param entity self Sentry
+ * @return boolean ???
+ */
+voidjs.scripts.sentry_tracking = function( self ) {
   // The active scripts are not called with any arguments so we need to close them in
 
   // NB! active script is not necesarry for sentries
   // It's just for consistency in AI's and discovering
   // recurring patterns that can be modulised.
-
-  // # Aggro system
-  // Initially the Sentry will query (AABB) the area around itself looking
-  // for oposing team entities. It will target the closest one by creating an
-  // aggro table ([array]) with entity id's (closer being more aggressive)
-  // The sentry will per loop continually target the highest aggro entity
 
   var aggro = {};
   var present = {};
@@ -253,8 +283,8 @@ voidjs.scripts.sentry_tracking = function (self) {
     var entity = fixture.m_body;
     if (entity.team !== undefined && entity.team != self.team) {
       // Targeted entity is of another team
-      var len = vcore.len(self, entity);
-      if (len < self.target_range) {
+      var len = vcore.len( self, entity );
+      if ( len < self.target_range ) {
         ticks = 120; // reset ticks
         if (!(entity.id in aggro)) {
           // Register a new entity in the aggro table
@@ -304,40 +334,77 @@ voidjs.scripts.sentry_tracking = function (self) {
 };
 
 
-voidjs.scripts.life = function (self) {
+/**
+ * Common life script
+ * This code kills the entity if its life becomes less than or equal to 0
+ * @progress 100%
+ * @param entity self Entity
+ * @return undefined
+ */
+voidjs.scripts.life = function( self ) {
   return function () {
-    if (self.kill && self.IsActive() && self.life <= 0) {
+    if ( self.kill && self.IsActive() && self.life <= 0 ) {
       self.kill();
     }
   };
 };
-voidjs.scripts.decay = function (self, args) {
-  if (!args) { debugger; }
+
+/**
+ * Decay script
+ * This code slowly drains the life from an entity.
+ * Why is there a debugger snuck in here?
+ * @progress 80%
+ * @param entity self Entity
+ * @param array args An array with the following params [rate]
+ * @return undefined
+ */
+voidjs.scripts.decay = function( self, args ) {
+  if ( !args ) { debugger; }
   var rate = args[0];
   return function () {
     self.life -= rate;
   };
 };
-voidjs.scripts.fade = function (self, art) {
+
+/**
+ * Fade script
+ * Makes the entity more and more transparent based on life / max_life.
+ * @progress 90%
+ * @param entity self Entity
+ * @param &object art The art (style object) of the entity
+ * @return undefined
+ */
+voidjs.scripts.fade = function( self, art ) {
   if (art === undefined) {
     art = self.style;
   }
-  var r = parseInt(art.fill.substr(1,2), 16);
-  var g = parseInt(art.fill.substr(3,2), 16);
-  var b = parseInt(art.fill.substr(5,2), 16);
-  return function () {
+  var r = parseInt( art.fill.substr( 1, 2 ), 16 );
+  var g = parseInt( art.fill.substr( 3, 2 ), 16 );
+  var b = parseInt( art.fill.substr( 5, 2 ), 16 );
+  return function() {
     var opac = 0;
-    if (self.life !== 0) {
+    if ( self.life !== 0 ) {
       opac = self.life / self.max_life;
     }
-    if (opac > 0.1) {
+    // Fill with colours and opacity until the entity becomes invisible
+    if ( opac > 0.1 ) {
       art.fill = 'rgba(' + r + ',' + g + ',' + b + ',' + opac + ')';
-    } else {
+    }
+    else {
       art.fill = false;
     }
   };
 };
-voidjs.scripts.regen = function (self, rate) {
+
+/**
+ * Regenerate script
+ * Gradually refils life of the entity.
+ * @progress 100%
+ * @param entity self Entity
+ * @param number rate
+ * @return undefined
+ */
+voidjs.scripts.regen = function( self, rate ) {
   if (rate === undefined) {
     rate = 1 / voidjs.fps;
   }
@@ -353,6 +420,14 @@ voidjs.scripts.regen = function (self, rate) {
     }
   };
 };
+
+/**
+ * Cooldown script
+ * Ticks away the cooldown for entities.
+ * @progress 100%
+ * @param entity self Entity
+ * @return undefined
+ */
 voidjs.scripts.cooldown = function (self) {
   return function() {
     if (self.cd > 0) {
@@ -360,6 +435,15 @@ voidjs.scripts.cooldown = function (self) {
     }
   };
 };
+
+/**
+ * Test script
+ * A script that stops the execution of the game for debugging purposes.
+ * Should be improved and expanded upon. Maybe invest time in a dedicated
+ * @progress 30%
+ * @param entity self Entity
+ * @return undefined
+ */
 voidjs.scripts.test = function (self, args) {
   console.log(args);
   debugger;
@@ -367,6 +451,12 @@ voidjs.scripts.test = function (self, args) {
   };
 };
 
+/**
+ * Sword item (zone) script
+ * @progress 10%
+ * @param array args [bullet, body]
+ * @return undefined
+ */
 voidjs.scripts.item_sword = function (args) {
   var bullet = args[1];
   var body = args[0];
@@ -400,6 +490,12 @@ voidjs.scripts.item_sword = function (args) {
   }
 };
 
+/**
+ * Shield item (zone) script
+ * @progress 10%
+ * @param array args [bullet, body]
+ * @return undefined
+ */
 voidjs.scripts.item_shield = function (args) {
   var bullet = args[1];
   var body = args[0];
