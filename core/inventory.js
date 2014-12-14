@@ -20,6 +20,7 @@
     };
     helper.push = function( item ) {
       equipped[0] = item;
+      items.push( item );
       vcore.invoke( 'inventory-push', this, item, equipped, items );
 
       // @TODO: bind slot to slot action ( button )
