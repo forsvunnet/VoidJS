@@ -1,5 +1,8 @@
 // Update
 voidjs.update = function () {
+  // Run the control tick
+  voidjs.control.tick();
+
   voidjs.entityCreator.lateCreate();
   var mouse = voidjs.control.mouse,
       world = voidjs.world,
