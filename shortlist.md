@@ -9,3 +9,10 @@
 6. NPC drops
 
 7. Debris??
+
+8. Missions / Achievments / Quest system
+   [optional] Mission promt w/ [accept|cancel] or [ok|close] buttons
+   [optional] Mission inventory w/ [abandon] button per item
+   [optional] Mission complete promt w/ [ok|close] button
+              Use callback to display complete message. ( achievement vs quest )
+   [optional] Mission rewards ( no rewards until end of chain for chained missions ).
