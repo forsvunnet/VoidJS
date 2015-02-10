@@ -239,3 +239,6 @@ vcore.canvas = function() {
 
 vcore.spawner = function( enityt_info ) {
 };
+
+
+

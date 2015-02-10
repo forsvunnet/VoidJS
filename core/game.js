@@ -27,23 +27,28 @@ voidjs.update = function () {
     return true;
   };
 
-  for (i in voidjs.control.player) {
-    var cO, controller = voidjs.control.player[i];
-    if (!controller.eid) {
+  for (i in voidjs.control.controller) {
+    // Create player entites
+    var cO, controller = voidjs.control.controller[i];
+    if ( !controller.eid ) {
+      // Controller has been created, but not attached to a player entity
+      // Create a new player at the last checkpoint
       cO = voidjs.entities[voidjs.entity_type_tracker.checkpoint[0]].GetPosition();
       controller.eid = voidjs.entityCreator.create('player', [cO.x, cO.y], 0 ,0);
     }
+
+    // Get the player entity
     var ship = voidjs.entities[controller.eid];
-    if (!ship) {
-      console.log('Error');
-      return;
-    }
+
+    // Apply movement (forces) to the ship
     apply_movement(ship, i);
+
+    // Draw the player entity
     voidjs.draw(ship);
     var shipAt = ship.GetPosition();
     // Per alive player :
     if (ship.IsActive()) {
-      // Trigger AI's:
+      // Trigger nearby AI's:
       var pos = ship.GetPosition();
       var plate = new b2AABB();
       var area = 7;
@@ -54,12 +59,13 @@ voidjs.update = function () {
     }
   }
 
-  // very slow loop: (Should be discontinued)
+  // Very slow loop: (Should be discontinued)
   for (i in entities) {
     if (entities[i].active_scripts !== undefined) {
       entities[i].active_scripts.call();
     }
   }
+  // Use this instead:
   for (i in active_entities) {
     if (entities[i].active_scripts !== undefined) {
       //entities[i].active_scripts.call();
@@ -72,7 +78,7 @@ voidjs.update = function () {
   destroy_entities.length = 0;
 
 
-  if (world) {
+  if ( world ) {
     world.Step(voidjs.fps / 1000, 10, 10);
     world.DrawDebugData();
     world.ClearForces();
@@ -99,8 +105,8 @@ var apply_movement = function(ship, device) {
   }
   else {
     direction = new b2Vec2(
-      voidjs.control.player[device].direction.x,
-      voidjs.control.player[device].direction.y
+      voidjs.control.controller[device].direction.x,
+      voidjs.control.controller[device].direction.y
     );
     direction.Multiply(20);
   }
@@ -443,6 +449,7 @@ voidjs.scripts.cooldown = function (self) {
  * Test script
  * A script that stops the execution of the game for debugging purposes.
  * Should be improved and expanded upon. Maybe invest time in a dedicated
+ * devel module.
  * @progress 30%
  * @param entity self Entity
  * @return undefined

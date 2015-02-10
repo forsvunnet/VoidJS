@@ -8,6 +8,8 @@
 // if (voids.key.#.check()) {} to see if a key has been pressed
 
 ( function( c ) {
+  var b2Vec2 = Box2D.Common.Math.b2Vec2;
+
   // Init function that only runs once (guaranteed);
   c.once = function() {
     var once = false;
@@ -40,10 +42,12 @@
    * Control tick, runs every game tick.
    */
   c.tick = function() {
+    // console.log( ' test ' );
     // Loop through all the active controllers
     for ( var x in c.controller ) {
       var control = c.controller[x];
       // Loop through all the ticks on the controller
+      // console.log( control.ticks );
       for ( var machine_key in control.ticks ) {
         var tick = control.ticks[machine_key];
         // Callback the tick if it's active
@@ -60,7 +64,11 @@
    */
   var create_binder = function( keymap ) {
     var callbacks = {};
-    var binder;
+    var binder = {};
+
+    // Create a ticks object to store references to tick triggered callbacks
+    binder.ticks = {};
+
     /**
      * Bind a key to a callback
      */
@@ -87,10 +95,15 @@
         return;
       }
       var key = keymap[machine_key]; // = action1
+
       // Sanity check
       if ( callbacks[key] && callbacks[key][type] ) {
         // Exec the callback
-        callbacks[key][type]();
+        var entity = false;
+        if ( binder.eid ) {
+          entity = voidjs.entities[binder.eid];
+        }
+        callbacks[key][type]( entity );
       }
     };
 
@@ -107,8 +120,6 @@
       }
     };
 
-    // Create a ticks object to store references to tick triggered callbacks
-    binder.ticks = {};
 
     // Return the binder
     return binder;
@@ -150,19 +161,18 @@
       c.controller.keyboard = create_controller();
       var helper = {};
     }
-    if (key.fire) {
+    // if (key.fire) { }
+    var machine_key = keyboard_map[e.keyCode];
+    if ( machine_key && !c.controller.keyboard.ticks[machine_key] ) {
+      c.controller.keyboard.trigger( machine_key, 'keydown' );
+      c.controller.keyboard.ticks[machine_key] = true;
     }
-    c.controller.keyboard.trigger( keyboard_map[e.keyCode], 'keydown' );
   };
   c.keyup = function(e) {
     var key = voidjs.key;
-    if (key.fire) {
-    }
-    if(key.select) {
-    }
-
-    c.toggle_key(e.keyCode, false);
+    c.toggle_key( e.keyCode, false );
     c.controller.keyboard.trigger( keyboard_map[e.keyCode], 'keyup' );
+    c.controller.keyboard.ticks[keyboard_map[e.keyCode]] = false;
   };
   c.toggle_key = function(key, bool) {
     var k, old_keys = {};
@@ -250,9 +260,24 @@
     mouse.y = (e.clientY - canvasPosition.y) / 30;
   };
 
+  c.mouseXY = function( self, x ) {
+    // console.log( c.mouse );
+    // console.log( self );
+    // console.log( x );
+    var target = { x: c.mouse.x, y: c.mouse.y };
+    var pos = self.GetPosition();
+    console.log( '----------------' );
+    console.log( target );
+    target.x += pos.x;
+    target.y += pos.y;
+    console.log( pos );
+    console.log( target );
+    console.log( '----------------' );
+    return target;
+  };
+
   // Gamepad
   c.gamepad_connected = function(device) {
-    var b2Vec2 = Box2D.Common.Math.b2Vec2;
     if (!c.controller[device.index]) {
       c.controller[device.index] = create_controller();
     }
@@ -271,9 +296,5 @@
         }
       }
     }
-  };
-
-  c.action_map = {
-    'action1': trigger_equip(),
   };
 } ( voidjs.control ) );
