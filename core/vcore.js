@@ -1,3 +1,16 @@
+
+console.once = function() {
+  var things = {};
+  return function( thing, id ) {
+    if ( !id )
+      id = '1';
+    if ( things[id] )
+      return;
+    this.log( thing );
+    things[id] = true;
+  };
+}();
+
 // Solarized
 // http://ethanschoonover.com/solarized
 // Because it's the best palette i know
@@ -216,6 +229,15 @@ var c = [
   solarized.blue,  // Player color
   solarized.magenta, // Enemy color
   solarized.base03  // Checkpoint / End
+];
+
+c = [
+  '#112211', // BG
+  '#224422', // Wall line
+  '#193319', // Level BG
+  '#335533',  // Player color
+  '#335533', // Enemy color
+  '#224422'  // Checkpoint / End
 ];
 
 $('body').css('background', c[0]);

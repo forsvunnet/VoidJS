@@ -1,5 +1,4 @@
 // @TODO:
-
 // SLOT SYSTEM !!!
 
 
@@ -44,10 +43,11 @@
   c.tick = function() {
     // console.log( ' test ' );
     // Loop through all the active controllers
+    // console.once( c.controller, '2' );
     for ( var x in c.controller ) {
       var control = c.controller[x];
       // Loop through all the ticks on the controller
-      // console.log( control.ticks );
+      // console.once( control.ticks, '3' );
       for ( var machine_key in control.ticks ) {
         var tick = control.ticks[machine_key];
         // Callback the tick if it's active
@@ -254,10 +254,10 @@
     return { x: x, y: y };
   };
   c.mousemove = function (e) {
-    var canvasPosition = getElementPosition(voidjs.canvas);
+    var canvas_position = getElementPosition(voidjs.canvas);
     var mouse = c.mouse;
-    mouse.x = (e.clientX - canvasPosition.x) / 30;
-    mouse.y = (e.clientY - canvasPosition.y) / 30;
+    mouse.x = (e.clientX - canvas_position.x) / 30;
+    mouse.y = (e.clientY - canvas_position.y) / 30;
   };
 
   c.mouseXY = function( self, x ) {
@@ -270,9 +270,16 @@
     console.log( target );
     target.x += pos.x;
     target.y += pos.y;
+
+    var wiw = window.innerWidth;
+    var wih = window.innerHeight;
+    target.x -= wiw / 60;
+    target.y -= wih / 60;
+
     console.log( pos );
     console.log( target );
     console.log( '----------------' );
+
     return target;
   };
 
